@@ -6,7 +6,6 @@ import math
 import os
 import random
 import sys
-import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -26,13 +25,12 @@ PLAYLIST_SIZE = int(os.getenv("PLAYLIST_SIZE", "40"))
 MAX_PER_ARTIST = int(os.getenv("MAX_PER_ARTIST", "2"))
 MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "2"))
 
-AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "14"))
+AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "30"))
 POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 
 DAILY_PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Daily Mix")
 WEEKLY_PLAYLIST_PREFIX = os.getenv("WEEKLY_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
-WEEKLY_PLAYLISTS = True
 
 APP_DIR = Path(__file__).resolve().parent
 HISTORY_FILE = APP_DIR / "history.json"
@@ -367,12 +365,35 @@ def select_tracks(
     starred_ids,
     history,
 ):
+    # First try to select ONLY songs that have not appeared
+    # in a recently generated playlist.
+    fresh_songs = [
+        song
+        for song in songs
+        if not generated_recently(song["id"], history)
+    ]
+
+    # If we don't have enough fresh songs, fall back to the
+    # complete pool so the playlist can still reach PLAYLIST_SIZE.
+    if len(fresh_songs) >= PLAYLIST_SIZE:
+        candidates = fresh_songs
+        print(
+            f"Using {len(fresh_songs)} fresh songs "
+            f"(excluding recently generated tracks)."
+        )
+    else:
+        candidates = songs
+        print(
+            f"WARNING: Only {len(fresh_songs)} fresh songs available. "
+            f"Using full candidate pool."
+        )
+
     scored = [
         (
             score_song(song, mode, starred_ids, history),
             song,
         )
-        for song in songs
+        for song in candidates
     ]
 
     scored.sort(
@@ -385,8 +406,7 @@ def select_tracks(
     artists = defaultdict(int)
     albums = defaultdict(int)
 
-    # Consider more candidates than we need so diversity restrictions don't
-    # leave us short.
+    # Enforce artist and album diversity.
     for score, song in scored:
         artist = artist_key(song)
         album = album_key(song)
@@ -405,8 +425,8 @@ def select_tracks(
         if len(selected) >= PLAYLIST_SIZE:
             break
 
-    # If the strict constraints left us short, fill the remainder with the
-    # best remaining tracks while still avoiding duplicate IDs.
+    # If diversity restrictions prevented us from reaching 40,
+    # fill from the remaining candidates.
     if len(selected) < PLAYLIST_SIZE:
         selected_ids = {song["id"] for song in selected}
 
@@ -424,17 +444,21 @@ def select_tracks(
 
     return selected[:PLAYLIST_SIZE]
 
-
 # ---------------------------------------------------------------------------
 # Playlist cleanup
 # ---------------------------------------------------------------------------
 
-def cleanup_old_playlists(navidrome):
+def cleanup_old_playlists(navidrome, frequency):
     playlists = navidrome.playlists()
 
     cutoff = today() - timedelta(days=KEEP_PLAYLIST_DAYS)
 
-    prefix = f"{PLAYLIST_PREFIX} —"
+    if frequency == "daily":
+        prefix = f"{DAILY_PLAYLIST_PREFIX} —"
+    elif frequency == "weekly":
+        prefix = f"{WEEKLY_PLAYLIST_PREFIX} —"
+    else:
+        raise ValueError(f"Unknown frequency: {frequency}")
 
     for playlist in playlists:
         name = playlist.get("name", "")
@@ -469,7 +493,6 @@ def cleanup_old_playlists(navidrome):
                     print(
                         f"WARNING: Could not delete {name}: {exc}"
                     )
-
 
 # ---------------------------------------------------------------------------
 # Main
