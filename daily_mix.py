@@ -29,7 +29,7 @@ MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "2"))
 AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "14"))
 POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 
-PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Weekly Mix")
+PLAYLIST_PREFIX = os.getenv("Weekly_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
 WEEKLY_PLAYLISTS = True
 
@@ -37,7 +37,7 @@ APP_DIR = Path(__file__).resolve().parent
 HISTORY_FILE = APP_DIR / "history.json"
 
 API_VERSION = "1.16.1"
-CLIENT_NAME = "DailyMixGenerator"
+CLIENT_NAME = "WeeklyMixGenerator"
 TIMEOUT = 30
 
 
@@ -193,7 +193,7 @@ def playlist_name(mode):
     Create a stable playlist name for the current week.
 
     Example:
-      Daily Mix — Discovery — 2026-08-17
+      Weekly Mix — Discovery — 2026-08-17
     """
     return f"{PLAYLIST_PREFIX} — {mode}"
 
@@ -489,7 +489,7 @@ def find_playlist(navidrome, name):
 
 def run(mode):
     print("=" * 70)
-    print(f"Navidrome Daily Mix Generator")
+    print(f"Navidrome Weekly Mix Generator")
     print(f"Mode: {mode}")
     print(f"Date: {today()}")
     print("=" * 70)
@@ -598,10 +598,10 @@ def usage():
         """
 Usage:
 
-  daily_mix.py discovery
-  daily_mix.py radio
-  daily_mix.py deep
-  daily_mix.py balanced
+  Weekly_mix.py discovery
+  Weekly_mix.py radio
+  Weekly_mix.py deep
+  Weekly_mix.py balanced
 
 Modes:
 
