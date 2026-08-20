@@ -537,7 +537,7 @@ def run(mode):
         )
 
     name = playlist_name(mode)
-    playlist = find_playlist(navidrome, os.name)
+    playlist = find_playlist(navidrome, name)
 
     print()
 
