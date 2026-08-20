@@ -11,7 +11,6 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
-from sympy import root
 
 # THIS IS A TEST 2
 # ---------------------------------------------------------------------------
