@@ -29,7 +29,7 @@ MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "2"))
 AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "14"))
 POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 
-PLAYLIST_PREFIX = os.getenv("Weekly_PLAYLIST_PREFIX", "Weekly Mix")
+PLAYLIST_PREFIX = os.getenv("WEEKLY_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
 WEEKLY_PLAYLISTS = True
 
@@ -489,7 +489,7 @@ def find_playlist(navidrome, name):
 
 def run(mode):
     print("=" * 70)
-    print(f"Navidrome Weekly Mix Generator")
+    print(f"Navidrome Daily Mix Generator")
     print(f"Mode: {mode}")
     print(f"Date: {today()}")
     print("=" * 70)
@@ -598,10 +598,10 @@ def usage():
         """
 Usage:
 
-  Weekly_mix.py discovery
-  Weekly_mix.py radio
-  Weekly_mix.py deep
-  Weekly_mix.py balanced
+  daily_mix.py discovery
+  daily_mix.py radio
+  daily_mix.py deep
+  daily_mix.py balanced
 
 Modes:
 
