@@ -113,45 +113,24 @@ class Navidrome:
 
         return result.get("playlists", {}).get("playlist", [])
 
-    def create_playlist(self, name, song_ids):
+    def create_or_update_playlist(self, name, song_ids, playlist_id=None):
         params = {
             "name": name,
+            "songId": song_ids,
         }
 
-        # Requests supports repeated parameters when supplied as a list.
-        params["songId"] = song_ids
+        if playlist_id:
+            params["playlistId"] = playlist_id
 
         return self.call("createPlaylist", **params)
 
     
-    def update_playlist(self, playlist_id, song_ids):
-        url = f"{self.base_url}/rest/updatePlaylist.view"
+    def update_playlist(self, playlist_id, name, song_ids):
+        # Delete the old playlist
+        self.delete_playlist(playlist_id)
 
-        query = self._auth()
-        query["playlistId"] = playlist_id
-
-        response = requests.post(
-            url,
-            params=query,
-            data=[("songId", song_id) for song_id in song_ids],
-            timeout=TIMEOUT,
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-        root = data.get("subsonic-response", {})
-
-        if root.get("status") != "ok":
-            error = root.get("error", {})
-            message = error.get("message", "Unknown Navidrome API error")
-            code = error.get("code", "?")
-            raise RuntimeError(
-                f"Navidrome API error {code}: {message}"
-            )
-
-        return root
-    
+        # Create a new playlist with the same name and new songs
+        return self.create_playlist(name, song_ids)
     def delete_playlist(self, playlist_id):
         self.call(
             "deletePlaylist",
@@ -602,12 +581,13 @@ def run(mode, frequency):
     song_ids = [song["id"] for song in selected]
 
     if playlist:
-        navidrome.update_playlist(
-            playlist_id=playlist["id"],
+        navidrome.create_or_update_playlist(
+            name=name,
             song_ids=song_ids,
+            playlist_id=playlist["id"],
         )
     else:
-        navidrome.create_playlist(
+        navidrome.create_or_update_playlist(
             name=name,
             song_ids=song_ids,
         )
