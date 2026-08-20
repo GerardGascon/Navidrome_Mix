@@ -27,10 +27,11 @@ MAX_PER_ARTIST = int(os.getenv("MAX_PER_ARTIST", "2"))
 MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "2"))
 
 AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "14"))
-POOL_SIZE = int(os.getenv("POOL_SIZE", "2000"))
+POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 
-PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Daily Mix")
+PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
+WEEKLY_PLAYLISTS = True
 
 APP_DIR = Path(__file__).resolve().parent
 HISTORY_FILE = APP_DIR / "history.json"
@@ -123,6 +124,16 @@ class Navidrome:
 
         return self.call("createPlaylist", **params)
 
+    
+    def update_playlist(self, playlist_id, song_ids):
+        params = {
+            "playlistId": playlist_id,
+            "songId": song_ids,
+        }
+
+        return self.call("updatePlaylist", **params)
+
+    
     def delete_playlist(self, playlist_id):
         self.call(
             "deletePlaylist",
@@ -169,9 +180,22 @@ def today():
     return datetime.now().astimezone().date()
 
 
-def playlist_name(mode):
-    return f"{PLAYLIST_PREFIX} — {mode} — {today().isoformat()}"
+def week_start():
+    """
+    Return the Monday of the current week.
+    """
+    current = today()
+    return current - timedelta(days=current.weekday())
 
+
+def playlist_name(mode):
+    """
+    Create a stable playlist name for the current week.
+
+    Example:
+      Daily Mix — Discovery — 2026-08-17
+    """
+    return f"{PLAYLIST_PREFIX} — {mode}"
 
 def normalize_song(song):
     """
@@ -449,6 +473,19 @@ def cleanup_old_playlists(navidrome):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+def find_playlist(navidrome, name):
+    """
+    Find an existing playlist by exact name.
+
+    Returns the playlist object or None.
+    """
+    playlists = navidrome.playlists()
+
+    for playlist in playlists:
+        if playlist.get("name") == name:
+            return playlist
+
+    return None
 
 def run(mode):
     print("=" * 70)
@@ -500,9 +537,16 @@ def run(mode):
         )
 
     name = playlist_name(mode)
+    playlist = find_playlist(navidrome, os.name)
 
     print()
-    print(f"Creating playlist: {name}")
+
+    if playlist:
+        print(f"Updating existing playlist: {name}")
+        print(f"Playlist ID: {playlist.get('id')}")
+    else:
+        print(f"Creating playlist: {name}")
+
     print()
 
     for index, song in enumerate(selected, 1):
@@ -512,10 +556,18 @@ def run(mode):
             f"{song.get('title', 'Unknown Title')}"
         )
 
-    navidrome.create_playlist(
-        name=name,
-        song_ids=[song["id"] for song in selected],
-    )
+    song_ids = [song["id"] for song in selected]
+
+    if playlist:
+        navidrome.update_playlist(
+            playlist_id=playlist["id"],
+            song_ids=song_ids,
+        )
+    else:
+        navidrome.create_playlist(
+            name=name,
+            song_ids=song_ids,
+        )
 
     # Record generated tracks so future mixes can avoid them.
     timestamp = datetime.now(timezone.utc).isoformat()
@@ -526,14 +578,13 @@ def run(mode):
         ] = timestamp
 
     history.setdefault("playlists", {})[name] = {
-        "created": timestamp,
+        "updated": timestamp,
         "mode": mode,
         "tracks": [song["id"] for song in selected],
     }
 
     save_history(history)
 
-    cleanup_old_playlists(navidrome)
 
     print()
     print("=" * 70)
