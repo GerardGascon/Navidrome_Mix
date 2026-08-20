@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
+from sympy import root
 
 # THIS IS A TEST 2
 # ---------------------------------------------------------------------------
@@ -125,13 +126,32 @@ class Navidrome:
 
     
     def update_playlist(self, playlist_id, song_ids):
-        params = {
-            "playlistId": playlist_id,
-            "songId": song_ids,
-        }
+        url = f"{self.base_url}/rest/updatePlaylist.view"
 
-        return self.call("updatePlaylist", **params)
+        query = self._auth()
+        query["playlistId"] = playlist_id
 
+        response = requests.post(
+            url,
+            params=query,
+            data=[("songId", song_id) for song_id in song_ids],
+            timeout=TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+        root = data.get("subsonic-response", {})
+
+        if root.get("status") != "ok":
+            error = root.get("error", {})
+            message = error.get("message", "Unknown Navidrome API error")
+            code = error.get("code", "?")
+            raise RuntimeError(
+                f"Navidrome API error {code}: {message}"
+            )
+
+        return root
     
     def delete_playlist(self, playlist_id):
         self.call(
