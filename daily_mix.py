@@ -29,7 +29,8 @@ MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "2"))
 AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "14"))
 POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 
-PLAYLIST_PREFIX = os.getenv("WEEKLY_PLAYLIST_PREFIX", "Weekly Mix")
+DAILY_PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Daily Mix")
+WEEKLY_PLAYLIST_PREFIX = os.getenv("WEEKLY_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
 WEEKLY_PLAYLISTS = True
 
@@ -188,15 +189,15 @@ def week_start():
     return current - timedelta(days=current.weekday())
 
 
-def playlist_name(mode):
-    """
-    Create a stable playlist name for the current week.
+def playlist_name(mode, frequency):
+    if frequency == "daily":
+        prefix = DAILY_PLAYLIST_PREFIX
+    elif frequency == "weekly":
+        prefix = WEEKLY_PLAYLIST_PREFIX
+    else:
+        raise ValueError(f"Unknown frequency: {frequency}")
 
-    Example:
-      Weekly Mix — Discovery — 2026-08-17
-    """
-    return f"{PLAYLIST_PREFIX} — {mode}"
-
+    return f"{prefix} — {mode}"
 def normalize_song(song):
     """
     Make sure fields we depend on always exist.
@@ -487,9 +488,9 @@ def find_playlist(navidrome, name):
 
     return None
 
-def run(mode):
+def run(mode, frequency):
     print("=" * 70)
-    print(f"Navidrome Daily Mix Generator")
+    print(f"Navidrome {frequency.title()} Mix Generator")
     print(f"Mode: {mode}")
     print(f"Date: {today()}")
     print("=" * 70)
@@ -536,7 +537,7 @@ def run(mode):
             f"Could only select {len(selected)} songs."
         )
 
-    name = playlist_name(mode)
+    name = playlist_name(mode, frequency)
     playlist = find_playlist(navidrome, name)
 
     print()
@@ -614,11 +615,41 @@ Modes:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        usage()
+    if len(sys.argv) != 3:
+        print(
+            """
+Usage:
+
+  daily_mix.py daily discovery
+  daily_mix.py daily radio
+  daily_mix.py daily deep
+  daily_mix.py daily balanced
+
+  daily_mix.py weekly discovery
+  daily_mix.py weekly radio
+  daily_mix.py weekly deep
+  daily_mix.py weekly balanced
+
+Frequencies:
+  daily    Update Daily Mix playlists
+  weekly   Update Weekly Mix playlists
+
+Modes:
+  discovery   A - Discovery
+  radio       B - Personal Radio
+  deep        C - Deep Library
+  balanced    D - Balanced
+"""
+        )
         sys.exit(1)
 
-    requested_mode = sys.argv[1].lower()
+    frequency = sys.argv[1].lower()
+    requested_mode = sys.argv[2].lower()
+
+    frequencies = {
+        "daily",
+        "weekly",
+    }
 
     modes = {
         "discovery": "Discovery",
@@ -627,8 +658,15 @@ if __name__ == "__main__":
         "balanced": "Balanced",
     }
 
-    if requested_mode not in modes:
-        usage()
+    if frequency not in frequencies:
+        print(f"Unknown frequency: {frequency}")
         sys.exit(1)
 
-    run(modes[requested_mode])
+    if requested_mode not in modes:
+        print(f"Unknown mode: {requested_mode}")
+        sys.exit(1)
+
+    run(
+        modes[requested_mode],
+        frequency,
+    )
