@@ -10,7 +10,7 @@ __pycache__/
 # Virtual environment
 venv/
 .venv/
-
+history.json
 # Runtime data
 history.json
 
