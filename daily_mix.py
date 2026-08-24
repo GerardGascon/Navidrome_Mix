@@ -129,8 +129,6 @@ class Navidrome:
         # Delete the old playlist
         self.delete_playlist(playlist_id)
 
-        # Create a new playlist with the same name and new songs
-        return self.create_playlist(name, song_ids)
     def delete_playlist(self, playlist_id):
         self.call(
             "deletePlaylist",
@@ -441,56 +439,6 @@ def select_tracks(
     random.shuffle(selected)
 
     return selected[:PLAYLIST_SIZE]
-
-# ---------------------------------------------------------------------------
-# Playlist cleanup
-# ---------------------------------------------------------------------------
-
-def cleanup_old_playlists(navidrome, frequency):
-    playlists = navidrome.playlists()
-
-    cutoff = today() - timedelta(days=KEEP_PLAYLIST_DAYS)
-
-    if frequency == "daily":
-        prefix = f"{DAILY_PLAYLIST_PREFIX} —"
-    elif frequency == "weekly":
-        prefix = f"{WEEKLY_PLAYLIST_PREFIX} —"
-    else:
-        raise ValueError(f"Unknown frequency: {frequency}")
-
-    for playlist in playlists:
-        name = playlist.get("name", "")
-
-        if not name.startswith(prefix):
-            continue
-
-        parts = name.split(" — ")
-
-        if len(parts) < 3:
-            continue
-
-        date_string = parts[-1]
-
-        try:
-            playlist_date = datetime.strptime(
-                date_string,
-                "%Y-%m-%d",
-            ).date()
-        except ValueError:
-            continue
-
-        if playlist_date < cutoff:
-            playlist_id = playlist.get("id")
-
-            if playlist_id:
-                print(f"Deleting old playlist: {name}")
-
-                try:
-                    navidrome.delete_playlist(playlist_id)
-                except Exception as exc:
-                    print(
-                        f"WARNING: Could not delete {name}: {exc}"
-                    )
 
 # ---------------------------------------------------------------------------
 # Main
