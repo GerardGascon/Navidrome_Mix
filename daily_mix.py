@@ -21,7 +21,7 @@ NAVIDROME_URL = os.getenv("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip("/")
 NAVIDROME_USER = os.environ["NAVIDROME_USER"]
 NAVIDROME_PASSWORD = os.environ["NAVIDROME_PASSWORD"]
 
-PLAYLIST_SIZE = int(os.getenv("PLAYLIST_SIZE", "40"))
+PLAYLIST_SIZE = int(os.getenv("PLAYLIST_SIZE", "155"))
 MAX_PER_ARTIST = int(os.getenv("MAX_PER_ARTIST", "2"))
 MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "2"))
 
