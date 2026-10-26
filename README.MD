@@ -6,39 +6,14 @@ Automatically generates Daily and Weekly playlists in Navidrome using several mi
 
 This application generates four types of mixes:
 
-* **Discovery** — prioritizes tracks that have never or rarely been played.
-* **Personal Radio** — favors familiar and starred tracks.
-* **Deep Library** — strongly favors rarely/never-played tracks.
-* **Balanced** — combines discovery, familiarity, favorites, and randomness.
+- **Discovery**: prioritizes tracks that have never or rarely been played.
+- **Personal Radio**: favors familiar and starred tracks.
+- **Deep Library**: strongly favors rarely/never-played tracks.
+- **Balanced**: combines discovery, familiarity, favorites, and randomness.
 
 Each mix contains the number of tracks configured by `PLAYLIST_SIZE`.
 
 The playlists are persistent. Running the generator again updates the existing playlist rather than creating a new dated playlist.
-
-## Directory
-
-The application lives at:
-
-```text
-/DATA/Applications/Navidrome_Mix/
-```
-
-Expected files:
-
-```text
-Navidrome_Mix/
-├── daily_mix.py
-├── history.json
-├── .env
-├── .gitignore
-└── README.md
-```
-
-`.env` contains the Navidrome credentials and configuration.
-
-`data/history.json` stores track and playlist history so recently generated tracks can be avoided.
-
----
 
 # Configuration
 
@@ -49,19 +24,19 @@ The application uses environment variables for configuration.
 Example:
 
 ```text
-NAVIDROME_URL=http://127.0.0.1:4533
+CLIENT_TYPE=navidrome
+NAVIDROME_URL=YOUR_NAVIDROME_URL
 NAVIDROME_USER=YOUR_NAVIDROME_USERNAME
 NAVIDROME_PASSWORD=YOUR_NAVIDROME_PASSWORD
 
-PLAYLIST_SIZE=80
+PLAYLIST_SIZE=50
 MAX_PER_ARTIST=2
-MAX_PER_ALBUM=2
+MAX_PER_ALBUM=1
+
+SONG_MIN_LENGTH=60
 
 AVOID_GENERATED_DAYS=30
 POOL_SIZE=3000
-
-DAILY_PLAYLIST_PREFIX=Daily Mix
-WEEKLY_PLAYLIST_PREFIX=Weekly Mix
 KEEP_PLAYLIST_DAYS=30
 ```
 
