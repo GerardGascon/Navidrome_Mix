@@ -56,7 +56,7 @@ def run(name, mode):
     print()
 
     for index, song in enumerate(selected, 1):
-        print(f"{index:02d}. {song.artist} - {song.artist}")
+        print(f"{index:02d}. {song.title} - {song.artist}")
 
     client.create_or_update_playlist(
         name=name,
