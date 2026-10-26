@@ -3,11 +3,10 @@
 import json
 import math
 import os
-import random
 import sys
-from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
+import globals
 from clients.client import Client
 from clients.navidrome import Navidrome
 from playlists.balanced import BalancedPlaylistGenerator
@@ -15,9 +14,7 @@ from playlists.deep import DeepPlaylistGenerator
 from playlists.discovery import DiscoveryPlaylistGenerator
 from playlists.playlistgenerator import PlaylistGenerator
 from playlists.radio import RadioPlaylistGenerator
-
-import globals
-from utils import generated_recently, normalize_song, song_key, artist_key, album_key, today, playlist_name
+from utils import normalize_song, song_key, today, playlist_name
 
 # ---------------------------------------------------------------------------
 # Configuration
