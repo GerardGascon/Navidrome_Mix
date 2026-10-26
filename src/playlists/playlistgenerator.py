@@ -16,14 +16,13 @@ class ScoredSong:
 
 class PlaylistGenerator(ABC):
     @abstractmethod
-    def _score_song(self, play_count: int, is_starred: bool) -> float:
+    def _score_song(self, song: Song) -> float:
         pass
 
-    def _score(self, song: Song, starred_ids, history) -> float:
+    def _score(self, song: Song, history) -> float:
         play_count = song.play_count
-        is_starred = song.id in starred_ids
 
-        score = self._score_song(play_count, is_starred)
+        score = self._score_song(song)
 
         # Strongly discourage tracks that appeared in recent generated mixes.
         if self._generated_recently(song.id, history):
@@ -47,11 +46,11 @@ class PlaylistGenerator(ABC):
 
         return played >= cutoff
 
-    def generate(self, songs: list[Song], starred_ids, history) -> list[Song]:
+    def generate(self, songs: list[Song], history) -> list[Song]:
         candidates = self._get_playlist_candidates(history, songs)
 
         scored: list[ScoredSong] = [
-            (ScoredSong(song=song, score=self._score(song, starred_ids, history)))
+            (ScoredSong(song=song, score=self._score(song, history)))
             for song in candidates
         ]
 

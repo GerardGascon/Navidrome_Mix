@@ -19,6 +19,10 @@ class Client(ABC):
         pass
 
     @abstractmethod
+    def _starred_ids(self) -> list[str]:
+        pass
+
+    @abstractmethod
     def playlists(self):
         pass
 
@@ -64,5 +68,10 @@ class Client(ABC):
                 songs[song.id] = song
 
             print(f"  pool: {len(songs)} songs (request {attempts}/{max_attempts})")
+
+        starred: list[str] = self._starred_ids()
+        for song in starred:
+            if song in songs:
+                songs[song].is_starred = True
 
         return list[Song](songs.values())

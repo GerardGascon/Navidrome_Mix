@@ -5,6 +5,7 @@ class Song:
         self.artist = artist
         self.album = album
         self.play_count = play_count
+        self.is_starred = False
 
 
 class Playlist:

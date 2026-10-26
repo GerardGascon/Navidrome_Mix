@@ -94,6 +94,17 @@ class Navidrome(Client):
 
         return songs
 
+    def _starred_ids(self) -> list[str]:
+        result = self._call("getStarred2")
+
+        batch = result.get("starred2", {}).get("song", [])
+
+        songs: list[str] = []
+        for raw_song in batch:
+            songs.append(self._parse_song(raw_song).id)
+
+        return songs
+
     def playlists(self):
         result = self._call("getPlaylists")
 

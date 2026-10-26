@@ -94,14 +94,6 @@ def run(name, mode):
 
     history = load_history()
 
-    # Get favorites for Personal Radio / Balanced scoring.
-    print("Loading favorites...")
-    starred = client.starred()
-
-    starred_ids = { song.id for song in starred }
-
-    print(f"Loaded {len(starred_ids)} favorites.")
-
     songs: list[Song] = client.build_pool()
 
     if len(songs) < globals.PLAYLIST_SIZE:
@@ -113,11 +105,7 @@ def run(name, mode):
     print(f"Selecting {globals.PLAYLIST_SIZE} tracks...")
 
     playlist_generator = get_playlist_generator(mode)
-    selected: list[Song] = playlist_generator.generate(
-        songs=songs,
-        starred_ids=starred_ids,
-        history=history,
-    )
+    selected: list[Song] = playlist_generator.generate(songs=songs, history=history)
 
     if len(selected) < globals.PLAYLIST_SIZE:
         raise RuntimeError(f"Could only select {len(selected)} songs.")
