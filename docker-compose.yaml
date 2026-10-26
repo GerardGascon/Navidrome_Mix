@@ -7,16 +7,12 @@ services:
       - NAVIDROME_URL=${NAVIDROME_URL}
       - NAVIDROME_USER=${NAVIDROME_USER}
       - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
-      - PLAYLIST_SIZE=250
+      - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
-      - MAX_PER_ALBUM=2
+      - MAX_PER_ALBUM=1
       - AVOID_GENERATED_DAYS=30
-      - POOL_SIZE=2000
-      # You can change the names that the prefixes of the generated playlists will have. The default is "Daily Mix" and "Weekly Mix"
-      - DAILY_PLAYLIST_PREFIX="Daily Mix"
-      - WEEKLY_PLAYLIST_PREFIX="Weekly Mix"
+      - POOL_SIZE=3000
       - KEEP_PLAYLIST_DAYS=30
-      - EXECUTE_ON_START=${EXECUTE_ON_START} # Debug only
     volumes:
       - ./data:/data
     restart: unless-stopped
