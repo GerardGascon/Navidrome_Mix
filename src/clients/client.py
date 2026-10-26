@@ -2,7 +2,7 @@ import math
 from abc import ABC, abstractmethod
 
 import globals
-from mix_types import Song
+from mix_types import Song, Playlist
 
 
 class Client(ABC):
@@ -23,15 +23,15 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_or_update_playlist(self, name, song_ids, playlist_id=None):
+    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None):
         pass
 
-    def find_playlist(self, name: str):
+    def find_playlist(self, name: str) -> Playlist | None:
         playlists = self.playlists()
 
         for playlist in playlists:
             if playlist.get("name") == name:
-                return playlist
+                return Playlist(playlist.get("id"))
 
         return None
 

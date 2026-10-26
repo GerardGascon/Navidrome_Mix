@@ -4,7 +4,7 @@ import os
 import requests
 
 import globals
-from mix_types import Song
+from mix_types import Song, Playlist
 from .client import Client
 
 
@@ -99,13 +99,13 @@ class Navidrome(Client):
 
         return result.get("playlists", {}).get("playlist", [])
 
-    def create_or_update_playlist(self, name, song_ids, playlist_id=None):
+    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None):
         params = {
             "name": name,
-            "songId": song_ids,
+            "songId": [song.id for song in songs],
         }
 
-        if playlist_id:
-            params["playlistId"] = playlist_id
+        if playlist:
+            params["playlistId"] = playlist.id
 
         return self._call("createPlaylist", **params)

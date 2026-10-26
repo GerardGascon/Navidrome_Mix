@@ -129,7 +129,7 @@ def run(mode, frequency):
 
     if playlist:
         print(f"Updating existing playlist: {name}")
-        print(f"Playlist ID: {playlist.get('id')}")
+        print(f"Playlist ID: {playlist.id}")
     else:
         print(f"Creating playlist: {name}")
 
@@ -138,18 +138,16 @@ def run(mode, frequency):
     for index, song in enumerate(selected, 1):
         print(f"{index:02d}. {song.artist} - {song.artist}")
 
-    song_ids = [song.id for song in selected]
-
     if playlist:
         client.create_or_update_playlist(
             name=name,
-            song_ids=song_ids,
-            playlist_id=playlist["id"],
+            songs=selected,
+            playlist=playlist,
         )
     else:
         client.create_or_update_playlist(
             name=name,
-            song_ids=song_ids,
+            songs=selected,
         )
 
     # Record generated tracks so future mixes can avoid them.

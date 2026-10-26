@@ -5,3 +5,8 @@ class Song:
         self.artist = artist
         self.album = album
         self.play_count = play_count
+
+
+class Playlist:
+    def __init__(self, playlist_id: str):
+        self.id = playlist_id
