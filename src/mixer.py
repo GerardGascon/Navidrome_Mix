@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import os
 import sys
 from datetime import datetime, timezone
@@ -8,12 +7,13 @@ from datetime import datetime, timezone
 import globals
 from clients.client import Client
 from clients.navidrome import Navidrome
+from history import History
+from mix_types import Song
 from playlists.balanced import BalancedPlaylistGenerator
 from playlists.deep import DeepPlaylistGenerator
 from playlists.discovery import DiscoveryPlaylistGenerator
 from playlists.playlistgenerator import PlaylistGenerator
 from playlists.radio import RadioPlaylistGenerator
-from mix_types import Song
 from utils import today
 
 # ---------------------------------------------------------------------------
@@ -25,42 +25,12 @@ NAVIDROME_URL = os.getenv("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip("/")
 NAVIDROME_USER = os.environ["NAVIDROME_USER"]
 NAVIDROME_PASSWORD = os.environ["NAVIDROME_PASSWORD"]
 
+
 def get_client() -> Client:
     match CLIENT_TYPE:
         case "navidrome":
             return Navidrome(NAVIDROME_URL, NAVIDROME_USER, NAVIDROME_PASSWORD)
     raise ValueError(f"Unknown client type: {CLIENT_TYPE}")
-
-
-# ---------------------------------------------------------------------------
-# History
-# ---------------------------------------------------------------------------
-
-def load_history():
-    if not globals.HISTORY_FILE.exists():
-        return {
-            "tracks": {},
-            "playlists": {},
-        }
-
-    try:
-        with globals.HISTORY_FILE.open("r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        print("WARNING: Could not read history.json; starting fresh.")
-        return {
-            "tracks": {},
-            "playlists": {},
-        }
-
-
-def save_history(history):
-    temporary = globals.HISTORY_FILE.with_suffix(".tmp")
-
-    with temporary.open("w", encoding="utf-8") as f:
-        json.dump(history, f, indent=2)
-
-    temporary.replace(globals.HISTORY_FILE)
 
 
 def get_playlist_generator(mode: str) -> PlaylistGenerator:
@@ -74,6 +44,7 @@ def get_playlist_generator(mode: str) -> PlaylistGenerator:
         case "balanced":
             return BalancedPlaylistGenerator()
     raise ValueError(f"Unknown mode: {mode}")
+
 
 # ---------------------------------------------------------------------------
 # Main
@@ -92,7 +63,7 @@ def run(name, mode):
     client.ping()
     print("Client connection OK.")
 
-    history = load_history()
+    history = History.load()
 
     songs: list[Song] = client.build_pool()
 
@@ -135,18 +106,15 @@ def run(name, mode):
     timestamp = datetime.now(timezone.utc).isoformat()
 
     for song in selected:
-        history.setdefault("tracks", {})[
-            song.id
-        ] = timestamp
+        history.tracks[song.id] = timestamp
 
-    history.setdefault("playlists", {})[name] = {
+    history.playlists[name] = {
         "updated": timestamp,
         "mode": mode,
         "tracks": [song.id for song in selected],
     }
 
-    save_history(history)
-
+    history.save()
 
     print()
     print("=" * 70)

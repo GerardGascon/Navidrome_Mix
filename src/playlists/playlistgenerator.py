@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 
 import globals
+from history import History
 from mix_types import Song
 from utils import artist_key, album_key
 
@@ -31,10 +32,10 @@ class PlaylistGenerator(ABC):
         return score
 
     @staticmethod
-    def _generated_recently(song_id, history):
+    def _generated_recently(song_id, history: History):
         cutoff = datetime.now(timezone.utc) - timedelta(days=globals.AVOID_GENERATED_DAYS)
 
-        timestamp = history.get("tracks", {}).get(song_id)
+        timestamp = history.tracks.get(song_id)
 
         if not timestamp:
             return False
@@ -46,7 +47,7 @@ class PlaylistGenerator(ABC):
 
         return played >= cutoff
 
-    def generate(self, songs: list[Song], history) -> list[Song]:
+    def generate(self, songs: list[Song], history: History) -> list[Song]:
         candidates = self._get_playlist_candidates(history, songs)
 
         scored: list[ScoredSong] = [
@@ -116,7 +117,7 @@ class PlaylistGenerator(ABC):
         return selected
 
     @classmethod
-    def _get_playlist_candidates(cls, history, songs: list[Song]) -> list[Song]:
+    def _get_playlist_candidates(cls, history: History, songs: list[Song]) -> list[Song]:
         # First try to select ONLY songs that have not appeared
         # in a recently generated playlist.
         fresh_songs = [
