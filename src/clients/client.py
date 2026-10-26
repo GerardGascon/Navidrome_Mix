@@ -65,7 +65,8 @@ class Client(ABC):
             batch = self.random_songs(batch_size)
 
             for song in batch:
-                songs[song.id] = song
+                if song.length >= globals.SONG_MIN_LENGTH:
+                    songs[song.id] = song
 
             print(f"  pool: {len(songs)} songs (request {attempts}/{max_attempts})")
 

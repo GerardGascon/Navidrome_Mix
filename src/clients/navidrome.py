@@ -64,6 +64,7 @@ class Navidrome(Client):
         return Song(
             song_id=raw.get("id", ""),
             title=raw.get("title", "Unknown Title"),
+            length=raw.get("duration", 0),
             artist=raw.get("artist", "Unknown Artist"),
             album=raw.get("album", "Unknown Album"),
             play_count=raw.get("playCount", 0),

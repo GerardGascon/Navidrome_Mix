@@ -9,6 +9,7 @@ PLAYLIST_SIZE = int(os.getenv("PLAYLIST_SIZE", "50"))
 MAX_PER_ARTIST = int(os.getenv("MAX_PER_ARTIST", "2"))
 MAX_PER_ALBUM = int(os.getenv("MAX_PER_ALBUM", "1"))
 
+SONG_MIN_LENGTH = int(os.getenv("SONG_MIN_LENGTH", "60"))
 AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "30"))
 POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))

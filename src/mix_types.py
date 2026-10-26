@@ -1,7 +1,8 @@
 class Song:
-    def __init__(self, song_id: str, title: str, artist: str, album: str, play_count: int):
+    def __init__(self, song_id: str, title: str, length: int, artist: str, album: str, play_count: int):
         self.id = song_id
         self.title = title
+        self.length = length
         self.artist = artist
         self.album = album
         self.play_count = play_count

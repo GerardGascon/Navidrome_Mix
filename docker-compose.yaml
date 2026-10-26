@@ -10,6 +10,7 @@ services:
       - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
       - MAX_PER_ALBUM=1
+      - SONG_MIN_LENGTH=60
       - AVOID_GENERATED_DAYS=30
       - POOL_SIZE=3000
       - KEEP_PLAYLIST_DAYS=30
