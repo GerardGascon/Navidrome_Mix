@@ -36,7 +36,7 @@ Navidrome_Mix/
 
 `.env` contains the Navidrome credentials and configuration.
 
-`history.json` stores track and playlist history so recently generated tracks can be avoided.
+`data/history.json` stores track and playlist history so recently generated tracks can be avoided.
 
 ---
 
@@ -617,7 +617,7 @@ sudo journalctl -u navidrome-daily-mix.service -n 200 --no-pager
 
 # Updating the Python Script
 
-After changing `daily_mix.py`, no systemd daemon reload is normally required.
+After changing `src/daily_mix.py`, no systemd daemon reload is normally required.
 
 The next service execution will use the updated Python file.
 
@@ -807,7 +807,7 @@ Handles:
 * Favorite tracks
 * Recent-generation avoidance
 * Creating/updating Navidrome playlists
-* Maintaining `history.json`
+* Maintaining `data/history.json`
 
 **systemd**
 
