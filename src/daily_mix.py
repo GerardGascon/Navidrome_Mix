@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -14,7 +13,7 @@ from playlists.deep import DeepPlaylistGenerator
 from playlists.discovery import DiscoveryPlaylistGenerator
 from playlists.playlistgenerator import PlaylistGenerator
 from playlists.radio import RadioPlaylistGenerator
-from utils import normalize_song, song_key, today, playlist_name
+from utils import today, playlist_name
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -62,46 +61,6 @@ def save_history(history):
 
     temporary.replace(globals.HISTORY_FILE)
 
-# ---------------------------------------------------------------------------
-# Build a large candidate pool
-# ---------------------------------------------------------------------------
-
-def build_pool(client):
-    """
-    Client's random-song endpoint gives us a large, varied sample of the
-    library without needing to walk every album individually.
-
-    Multiple requests are used to reduce duplication.
-    """
-
-    songs = {}
-
-    attempts = 0
-    max_attempts = max(3, math.ceil(globals.POOL_SIZE / 500))
-
-    print(f"Building candidate pool (~{globals.POOL_SIZE} songs)...")
-
-    while len(songs) < globals.POOL_SIZE and attempts < max_attempts:
-        attempts += 1
-
-        batch_size = min(
-            500,
-            globals.POOL_SIZE - len(songs),
-        )
-
-        batch = client.random_songs(batch_size)
-
-        for raw_song in batch:
-            song = normalize_song(raw_song)
-            songs[song_key(song)] = song
-
-        print(
-            f"  pool: {len(songs)} songs "
-            f"(request {attempts}/{max_attempts})"
-        )
-
-    return list(songs.values())
-
 
 def get_playlist_generator(mode: str) -> PlaylistGenerator:
     match mode:
@@ -118,19 +77,6 @@ def get_playlist_generator(mode: str) -> PlaylistGenerator:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def find_playlist(client: Client, name: str):
-    """
-    Find an existing playlist by exact name.
-
-    Returns the playlist object or None.
-    """
-    playlists = client.playlists()
-
-    for playlist in playlists:
-        if playlist.get("name") == name:
-            return playlist
-
-    return None
 
 def run(mode, frequency):
     print("=" * 70)
@@ -159,7 +105,7 @@ def run(mode, frequency):
 
     print(f"Loaded {len(starred_ids)} favorites.")
 
-    songs = build_pool(client)
+    songs = client.build_pool()
 
     if len(songs) < globals.PLAYLIST_SIZE:
         raise RuntimeError(
@@ -182,7 +128,7 @@ def run(mode, frequency):
         )
 
     name = playlist_name(mode, frequency)
-    playlist = find_playlist(client, name)
+    playlist = client.find_playlist(name)
 
     print()
 
