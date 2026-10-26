@@ -2,7 +2,7 @@ import math
 from abc import ABC, abstractmethod
 
 import globals
-from utils import normalize_song, song_key
+from mix_types import Song
 
 
 class Client(ABC):
@@ -11,11 +11,11 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def random_songs(self, size):
+    def random_songs(self, size) -> list[Song]:
         pass
 
     @abstractmethod
-    def starred(self):
+    def starred(self) -> list[Song]:
         pass
 
     @abstractmethod
@@ -35,7 +35,7 @@ class Client(ABC):
 
         return None
 
-    def build_pool(self):
+    def build_pool(self) -> list[Song]:
         """
         Client's random-song endpoint gives us a large, varied sample of the
         library without needing to walk every album individually.
@@ -43,7 +43,7 @@ class Client(ABC):
         Multiple requests are used to reduce duplication.
         """
 
-        songs = {}
+        songs: dict[str, Song] = {}
 
         attempts = 0
         max_attempts = max(3, math.ceil(globals.POOL_SIZE / 500))
@@ -60,12 +60,9 @@ class Client(ABC):
 
             batch = self.random_songs(batch_size)
 
-            for raw_song in batch:
-                song = normalize_song(raw_song)
-                songs[song_key(song)] = song
+            for song in batch:
+                songs[song.id] = song
 
-            print(
-                f"  pool: {len(songs)} songs (request {attempts}/{max_attempts})"
-            )
+            print(f"  pool: {len(songs)} songs (request {attempts}/{max_attempts})")
 
-        return list(songs.values())
+        return list[Song](songs.values())

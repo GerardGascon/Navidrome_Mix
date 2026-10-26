@@ -13,6 +13,7 @@ from playlists.deep import DeepPlaylistGenerator
 from playlists.discovery import DiscoveryPlaylistGenerator
 from playlists.playlistgenerator import PlaylistGenerator
 from playlists.radio import RadioPlaylistGenerator
+from mix_types import Song
 from utils import today, playlist_name
 
 # ---------------------------------------------------------------------------
@@ -97,15 +98,11 @@ def run(mode, frequency):
     print("Loading favorites...")
     starred = client.starred()
 
-    starred_ids = {
-        song["id"]
-        for song in starred
-        if song.get("id")
-    }
+    starred_ids = { song.id for song in starred }
 
     print(f"Loaded {len(starred_ids)} favorites.")
 
-    songs = client.build_pool()
+    songs: list[Song] = client.build_pool()
 
     if len(songs) < globals.PLAYLIST_SIZE:
         raise RuntimeError(
@@ -116,16 +113,14 @@ def run(mode, frequency):
     print(f"Selecting {globals.PLAYLIST_SIZE} tracks...")
 
     playlist_generator = get_playlist_generator(mode)
-    selected = playlist_generator.generate(
+    selected: list[Song] = playlist_generator.generate(
         songs=songs,
         starred_ids=starred_ids,
         history=history,
     )
 
     if len(selected) < globals.PLAYLIST_SIZE:
-        raise RuntimeError(
-            f"Could only select {len(selected)} songs."
-        )
+        raise RuntimeError(f"Could only select {len(selected)} songs.")
 
     name = playlist_name(mode, frequency)
     playlist = client.find_playlist(name)
@@ -141,13 +136,9 @@ def run(mode, frequency):
     print()
 
     for index, song in enumerate(selected, 1):
-        print(
-            f"{index:02d}. "
-            f"{song.get('artist', 'Unknown Artist')} - "
-            f"{song.get('title', 'Unknown Title')}"
-        )
+        print(f"{index:02d}. {song.artist} - {song.artist}")
 
-    song_ids = [song["id"] for song in selected]
+    song_ids = [song.id for song in selected]
 
     if playlist:
         client.create_or_update_playlist(
@@ -166,13 +157,13 @@ def run(mode, frequency):
 
     for song in selected:
         history.setdefault("tracks", {})[
-            song["id"]
+            song.id
         ] = timestamp
 
     history.setdefault("playlists", {})[name] = {
         "updated": timestamp,
         "mode": mode,
-        "tracks": [song["id"] for song in selected],
+        "tracks": [song.id for song in selected],
     }
 
     save_history(history)

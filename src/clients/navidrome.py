@@ -3,8 +3,10 @@ import os
 
 import requests
 
-from .client import Client
 import globals
+from mix_types import Song
+from .client import Client
+
 
 class Navidrome(Client):
     def __init__(self, base_url, username, password):
@@ -27,7 +29,7 @@ class Navidrome(Client):
             "f": "json",
         }
 
-    def call(self, endpoint, **params):
+    def _call(self, endpoint, **params):
         url = f"{self.base_url}/rest/{endpoint}.view"
 
         query = self._auth()
@@ -54,24 +56,46 @@ class Navidrome(Client):
 
         return root
 
-    def ping(self):
-        self.call("ping")
+    @staticmethod
+    def _parse_song(raw: dict) -> Song:
+        return Song(
+            song_id=raw.get("id", ""),
+            title=raw.get("title", "Unknown Title"),
+            artist=raw.get("artist", "Unknown Artist"),
+            album=raw.get("album", "Unknown Album"),
+            play_count=raw.get("playCount", 0),
+        )
 
-    def random_songs(self, size):
-        result = self.call(
+    def ping(self):
+        self._call("ping")
+
+    def random_songs(self, size) -> list[Song]:
+        result = self._call(
             "getRandomSongs",
             size=size,
         )
 
-        return result.get("randomSongs", {}).get("song", [])
+        batch = result.get("randomSongs", {}).get("song", [])
 
-    def starred(self):
-        result = self.call("getStarred2")
+        songs: list[Song] = []
+        for raw_song in batch:
+            songs.append(self._parse_song(raw_song))
 
-        return result.get("starred2", {}).get("song", [])
+        return songs
+
+    def starred(self) -> list[Song]:
+        result = self._call("getStarred2")
+
+        batch = result.get("starred2", {}).get("song", [])
+
+        songs: list[Song] = []
+        for raw_song in batch:
+            songs.append(self._parse_song(raw_song))
+
+        return songs
 
     def playlists(self):
-        result = self.call("getPlaylists")
+        result = self._call("getPlaylists")
 
         return result.get("playlists", {}).get("playlist", [])
 
@@ -84,4 +108,4 @@ class Navidrome(Client):
         if playlist_id:
             params["playlistId"] = playlist_id
 
-        return self.call("createPlaylist", **params)
+        return self._call("createPlaylist", **params)

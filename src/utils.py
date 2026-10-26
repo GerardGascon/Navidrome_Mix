@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import globals
+from mix_types import Song
 
 
 def today():
@@ -26,32 +27,12 @@ def playlist_name(mode, frequency):
     return f"{prefix} — {mode}"
 
 
-def normalize_song(song):
-    """
-    Make sure fields we depend on always exist.
-    """
-
-    song = dict(song)
-
-    song.setdefault("id", "")
-    song.setdefault("title", "Unknown Title")
-    song.setdefault("artist", "Unknown Artist")
-    song.setdefault("album", "Unknown Album")
-    song.setdefault("playCount", 0)
-
-    return song
+def artist_key(song: Song):
+    return song.artist.strip().lower()
 
 
-def song_key(song):
-    return song["id"]
-
-
-def artist_key(song):
-    return song.get("artist", "").strip().lower()
-
-
-def album_key(song):
+def album_key(song: Song):
     return (
-        song.get("artist", "").strip().lower(),
-        song.get("album", "").strip().lower(),
+        song.artist.strip().lower(),
+        song.album.strip().lower(),
     )

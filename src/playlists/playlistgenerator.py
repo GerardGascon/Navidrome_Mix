@@ -2,10 +2,16 @@ import random
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
-from typing import Any
 
-from utils import artist_key, album_key
 import globals
+from mix_types import Song
+from utils import artist_key, album_key
+
+
+class ScoredSong:
+    def __init__(self, song: Song, score: float):
+        self.song = song
+        self.score = score
 
 
 class PlaylistGenerator(ABC):
@@ -13,14 +19,14 @@ class PlaylistGenerator(ABC):
     def _score_song(self, play_count: int, is_starred: bool) -> float:
         pass
 
-    def _score(self, song, starred_ids, history) -> float:
-        play_count = int(song.get("playCount") or 0)
-        is_starred = song["id"] in starred_ids
+    def _score(self, song: Song, starred_ids, history) -> float:
+        play_count = song.play_count
+        is_starred = song.id in starred_ids
 
         score = self._score_song(play_count, is_starred)
 
         # Strongly discourage tracks that appeared in recent generated mixes.
-        if self._generated_recently(song["id"], history):
+        if self._generated_recently(song.id, history):
             score *= 0.03
 
         return score
@@ -41,42 +47,42 @@ class PlaylistGenerator(ABC):
 
         return played >= cutoff
 
-    def generate(self, songs, starred_ids, history):
+    def generate(self, songs: list[Song], starred_ids, history) -> list[Song]:
         candidates = self._get_playlist_candidates(history, songs)
 
-        scored = [
-            (self._score(song, starred_ids, history), song,)
+        scored: list[ScoredSong] = [
+            (ScoredSong(song=song, score=self._score(song, starred_ids, history)))
             for song in candidates
         ]
 
         scored.sort(
-            key=lambda item: item[0],
+            key=lambda item: item.score,
             reverse=True,
         )
 
-        selected = self._select_diverse_songs(scored)
+        selected: list[Song] = self._select_diverse_songs(scored)
 
         # If diversity restrictions prevented us from reaching 40,
         # fill from the remaining candidates.
         if len(selected) < globals.PLAYLIST_SIZE:
-            selected.append(self._get_remaining_candidates(scored, selected))
+            selected.extend(self._get_remaining_candidates(scored, selected))
 
         random.shuffle(selected)
 
         return selected[:globals.PLAYLIST_SIZE]
 
     @staticmethod
-    def _get_remaining_candidates(scored, selected) -> list[Any]:
-        candidates = []
+    def _get_remaining_candidates(scored: list[ScoredSong], selected: list[Song]) -> list[Song]:
+        candidates: list[Song] = []
 
-        selected_ids = {song["id"] for song in selected}
+        selected_ids = {song.id for song in selected}
 
-        for score, song in scored:
-            if song["id"] in selected_ids:
+        for scoredSong in scored:
+            if scoredSong.song.id in selected_ids:
                 continue
 
-            candidates.append(song)
-            selected_ids.add(song["id"])
+            candidates.append(scoredSong.song)
+            selected_ids.add(scoredSong.song.id)
 
             if len(selected) >= globals.PLAYLIST_SIZE:
                 break
@@ -84,16 +90,16 @@ class PlaylistGenerator(ABC):
         return candidates
 
     @staticmethod
-    def _select_diverse_songs(scored) -> list[Any]:
-        selected = []
+    def _select_diverse_songs(scored: list[ScoredSong]) -> list[Song]:
+        selected: list[Song] = []
 
         artists = defaultdict(int)
         albums = defaultdict(int)
 
         # Enforce artist and album diversity.
-        for score, song in scored:
-            artist = artist_key(song)
-            album = album_key(song)
+        for scoredSong in scored:
+            artist = artist_key(scoredSong.song)
+            album = album_key(scoredSong.song)
 
             if artists[artist] >= globals.MAX_PER_ARTIST:
                 continue
@@ -101,7 +107,7 @@ class PlaylistGenerator(ABC):
             if albums[album] >= globals.MAX_PER_ALBUM:
                 continue
 
-            selected.append(song)
+            selected.append(scoredSong.song)
 
             artists[artist] += 1
             albums[album] += 1
@@ -111,13 +117,13 @@ class PlaylistGenerator(ABC):
         return selected
 
     @classmethod
-    def _get_playlist_candidates(cls, history, songs) -> list[Any]:
+    def _get_playlist_candidates(cls, history, songs: list[Song]) -> list[Song]:
         # First try to select ONLY songs that have not appeared
         # in a recently generated playlist.
         fresh_songs = [
             song
             for song in songs
-            if not cls._generated_recently(song["id"], history)
+            if not cls._generated_recently(song.id, history)
         ]
 
         # If we don't have enough fresh songs, fall back to the
