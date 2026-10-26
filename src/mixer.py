@@ -1,54 +1,14 @@
 #!/usr/bin/env python3
-
 import os
 import sys
 from datetime import datetime, timezone
 
 import globals
-from clients.client import Client
-from clients.navidrome import Navidrome
+from factories import get_client, get_playlist_generator
 from history import History
 from mix_types import Song
-from playlists.balanced import BalancedPlaylistGenerator
-from playlists.deep import DeepPlaylistGenerator
-from playlists.discovery import DiscoveryPlaylistGenerator
-from playlists.playlistgenerator import PlaylistGenerator
-from playlists.radio import RadioPlaylistGenerator
 from utils import today
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-CLIENT_TYPE = os.getenv("CLIENT_TYPE", "navidrome")
-NAVIDROME_URL = os.getenv("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip("/")
-NAVIDROME_USER = os.environ["NAVIDROME_USER"]
-NAVIDROME_PASSWORD = os.environ["NAVIDROME_PASSWORD"]
-
-
-def get_client() -> Client:
-    match CLIENT_TYPE:
-        case "navidrome":
-            return Navidrome(NAVIDROME_URL, NAVIDROME_USER, NAVIDROME_PASSWORD)
-    raise ValueError(f"Unknown client type: {CLIENT_TYPE}")
-
-
-def get_playlist_generator(mode: str) -> PlaylistGenerator:
-    match mode:
-        case "discovery":
-            return DiscoveryPlaylistGenerator()
-        case "radio":
-            return RadioPlaylistGenerator()
-        case "deep":
-            return DeepPlaylistGenerator()
-        case "balanced":
-            return BalancedPlaylistGenerator()
-    raise ValueError(f"Unknown mode: {mode}")
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def run(name, mode):
     print("=" * 70)
@@ -57,7 +17,9 @@ def run(name, mode):
     print(f"Date: {today()}")
     print("=" * 70)
 
-    client = get_client()
+    client_type = os.getenv("CLIENT_TYPE")
+    assert client_type, "CLIENT_TYPE environment variable not set"
+    client = get_client(client_type)
 
     print("Testing client connection...")
     client.ping()

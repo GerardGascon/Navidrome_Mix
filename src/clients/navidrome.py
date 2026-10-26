@@ -9,10 +9,13 @@ from .client import Client
 
 
 class Navidrome(Client):
-    def __init__(self, base_url, username, password):
-        self.base_url = base_url
-        self.username = username
-        self.password = password
+    def __init__(self):
+        self.base_url = os.getenv("NAVIDROME_URL")
+        assert self.base_url, "NAVIDROME_URL environment variable not set"
+        self.username = os.getenv("NAVIDROME_USER")
+        assert self.username, "NAVIDROME_USER environment variable not set"
+        self.password = os.getenv("NAVIDROME_PASSWORD")
+        assert self.password, "NAVIDROME_PASSWORD environment variable not set"
 
     def _auth(self):
         salt = os.urandom(16).hex()
