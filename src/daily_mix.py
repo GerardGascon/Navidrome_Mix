@@ -10,14 +10,14 @@ from datetime import datetime, timedelta, timezone
 
 from clients.client import Client
 from clients.navidrome import Navidrome
-from playlists.balanced import BalancedPlaylist
-from playlists.deep import DeepPlaylist
-from playlists.discovery import DiscoveryPlaylist
-from playlists.playlist import Playlist
-from playlists.radio import RadioPlaylist
+from playlists.balanced import BalancedPlaylistGenerator
+from playlists.deep import DeepPlaylistGenerator
+from playlists.discovery import DiscoveryPlaylistGenerator
+from playlists.playlistgenerator import PlaylistGenerator
+from playlists.radio import RadioPlaylistGenerator
 
 import globals
-from utils import generated_recently
+from utils import generated_recently, normalize_song, song_key, artist_key, album_key, today, playlist_name
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -65,63 +65,6 @@ def save_history(history):
 
     temporary.replace(globals.HISTORY_FILE)
 
-
-# ---------------------------------------------------------------------------
-# Utility functions
-# ---------------------------------------------------------------------------
-
-def today():
-    return datetime.now().astimezone().date()
-
-
-def week_start():
-    """
-    Return the Monday of the current week.
-    """
-    current = today()
-    return current - timedelta(days=current.weekday())
-
-
-def playlist_name(mode, frequency):
-    if frequency == "daily":
-        prefix = globals.DAILY_PLAYLIST_PREFIX
-    elif frequency == "weekly":
-        prefix = globals.WEEKLY_PLAYLIST_PREFIX
-    else:
-        raise ValueError(f"Unknown frequency: {frequency}")
-
-    return f"{prefix} — {mode}"
-def normalize_song(song):
-    """
-    Make sure fields we depend on always exist.
-    """
-
-    song = dict(song)
-
-    song.setdefault("id", "")
-    song.setdefault("title", "Unknown Title")
-    song.setdefault("artist", "Unknown Artist")
-    song.setdefault("album", "Unknown Album")
-    song.setdefault("playCount", 0)
-
-    return song
-
-
-def song_key(song):
-    return song["id"]
-
-
-def artist_key(song):
-    return song.get("artist", "").strip().lower()
-
-
-def album_key(song):
-    return (
-        song.get("artist", "").strip().lower(),
-        song.get("album", "").strip().lower(),
-    )
-
-
 # ---------------------------------------------------------------------------
 # Build a large candidate pool
 # ---------------------------------------------------------------------------
@@ -163,109 +106,17 @@ def build_pool(client):
     return list(songs.values())
 
 
-# ---------------------------------------------------------------------------
-# Scoring
-# ---------------------------------------------------------------------------
-
-
-def get_playlist_generator(mode: str) -> Playlist:
+def get_playlist_generator(mode: str) -> PlaylistGenerator:
     match mode:
         case "discovery":
-            return DiscoveryPlaylist()
+            return DiscoveryPlaylistGenerator()
         case "radio":
-            return RadioPlaylist()
+            return RadioPlaylistGenerator()
         case "deep":
-            return DeepPlaylist()
+            return DeepPlaylistGenerator()
         case "balanced":
-            return BalancedPlaylist()
+            return BalancedPlaylistGenerator()
     raise ValueError(f"Unknown mode: {mode}")
-
-
-# ---------------------------------------------------------------------------
-# Select tracks while enforcing diversity
-# ---------------------------------------------------------------------------
-
-def select_tracks(songs, mode, starred_ids, history):
-    # First try to select ONLY songs that have not appeared
-    # in a recently generated playlist.
-    fresh_songs = [
-        song
-        for song in songs
-        if not generated_recently(song["id"], history)
-    ]
-
-    playlist_generator = get_playlist_generator(mode)
-
-    # If we don't have enough fresh songs, fall back to the
-    # complete pool so the playlist can still reach PLAYLIST_SIZE.
-    if len(fresh_songs) >= globals.PLAYLIST_SIZE:
-        candidates = fresh_songs
-        print(
-            f"Using {len(fresh_songs)} fresh songs "
-            f"(excluding recently generated tracks)."
-        )
-    else:
-        candidates = songs
-        print(
-            f"WARNING: Only {len(fresh_songs)} fresh songs available. "
-            f"Using full candidate pool."
-        )
-
-    scored = [
-        (
-            playlist_generator.score(song, starred_ids, history),
-            song,
-        )
-        for song in candidates
-    ]
-
-    scored.sort(
-        key=lambda item: item[0],
-        reverse=True,
-    )
-
-    selected = []
-
-    artists = defaultdict(int)
-    albums = defaultdict(int)
-
-    # Enforce artist and album diversity.
-    for score, song in scored:
-        artist = artist_key(song)
-        album = album_key(song)
-
-        if artists[artist] >= globals.MAX_PER_ARTIST:
-            continue
-
-        if albums[album] >= globals.MAX_PER_ALBUM:
-            continue
-
-        selected.append(song)
-
-        artists[artist] += 1
-        albums[album] += 1
-
-        if len(selected) >= globals.PLAYLIST_SIZE:
-            break
-
-    # If diversity restrictions prevented us from reaching 40,
-    # fill from the remaining candidates.
-    if len(selected) < globals.PLAYLIST_SIZE:
-        selected_ids = {song["id"] for song in selected}
-
-        for score, song in scored:
-            if song["id"] in selected_ids:
-                continue
-
-            selected.append(song)
-            selected_ids.add(song["id"])
-
-            if len(selected) >= globals.PLAYLIST_SIZE:
-                break
-
-    random.shuffle(selected)
-
-    return selected[:globals.PLAYLIST_SIZE]
 
 # ---------------------------------------------------------------------------
 # Main
@@ -321,9 +172,9 @@ def run(mode, frequency):
 
     print(f"Selecting {globals.PLAYLIST_SIZE} tracks...")
 
-    selected = select_tracks(
+    playlist_generator = get_playlist_generator(mode)
+    selected = playlist_generator.generate(
         songs=songs,
-        mode=mode,
         starred_ids=starred_ids,
         history=history,
     )

@@ -1,10 +1,10 @@
 import math
 import random
 
-from .playlist import Playlist
+from .playlistgenerator import PlaylistGenerator
 
 
-class RadioPlaylist(Playlist):
+class RadioPlaylistGenerator(PlaylistGenerator):
     def _score_song(self, play_count: int, is_starred: bool) -> float:
         low_play_score = 1 / (1 + play_count)
 

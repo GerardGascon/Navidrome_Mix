@@ -1,10 +1,10 @@
 import math
 import random
 
-from .playlist import Playlist
+from .playlistgenerator import PlaylistGenerator
 
 
-class BalancedPlaylist(Playlist):
+class BalancedPlaylistGenerator(PlaylistGenerator):
     def _score_song(self, play_count: int, is_starred: bool) -> float:
         never_played = 1 if play_count == 0 else 0
         low_play_score = 1 / (1 + play_count)
