@@ -244,27 +244,6 @@ def usage():
         """
 Usage:
 
-  daily_mix.py discovery
-  daily_mix.py radio
-  daily_mix.py deep
-  daily_mix.py balanced
-
-Modes:
-
-  discovery   A - Discovery
-  radio       B - Personal Radio
-  deep        C - Deep Library
-  balanced    D - Balanced
-"""
-    )
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print(
-            """
-Usage:
-
   daily_mix.py daily discovery
   daily_mix.py daily radio
   daily_mix.py daily deep
@@ -285,7 +264,12 @@ Modes:
   deep        C - Deep Library
   balanced    D - Balanced
 """
-        )
+    )
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        usage()
         sys.exit(1)
 
     frequency = sys.argv[1].lower()
@@ -304,11 +288,13 @@ Modes:
     }
 
     if frequency not in frequencies:
-        print(f"Unknown frequency: {frequency}")
+        print(f"Unknown frequency: {frequency}\n")
+        usage()
         sys.exit(1)
 
     if requested_mode not in modes:
-        print(f"Unknown mode: {requested_mode}")
+        print(f"Unknown mode: {requested_mode}\n")
+        usage()
         sys.exit(1)
 
     run(
