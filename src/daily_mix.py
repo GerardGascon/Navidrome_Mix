@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import hashlib
 import json
 import math
 import os
@@ -10,13 +9,14 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import requests
+from clients.navidrome import Navidrome
+from clients.client import Client
 
-# THIS IS A TEST 2
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
+CLIENT_TYPE = os.getenv("CLIENT_TYPE", "navidrome")
 NAVIDROME_URL = os.getenv("NAVIDROME_URL", "http://127.0.0.1:4533").rstrip("/")
 NAVIDROME_USER = os.environ["NAVIDROME_USER"]
 NAVIDROME_PASSWORD = os.environ["NAVIDROME_PASSWORD"]
@@ -32,108 +32,13 @@ DAILY_PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Daily Mix")
 WEEKLY_PLAYLIST_PREFIX = os.getenv("WEEKLY_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
 
-APP_DIR = Path(__file__).resolve().parent
-HISTORY_FILE = APP_DIR / "history.json"
+HISTORY_FILE = Path(os.path.abspath(os.sep)) / "data/history.json"
 
-API_VERSION = "1.16.1"
-CLIENT_NAME = "WeeklyMixGenerator"
-TIMEOUT = 30
-
-
-# ---------------------------------------------------------------------------
-# Navidrome client
-# ---------------------------------------------------------------------------
-
-class Navidrome:
-    def __init__(self):
-        self.base_url = NAVIDROME_URL
-        self.username = NAVIDROME_USER
-        self.password = NAVIDROME_PASSWORD
-
-    def _auth(self):
-        salt = os.urandom(16).hex()
-        token = hashlib.md5(
-            (self.password + salt).encode("utf-8")
-        ).hexdigest()
-
-        return {
-            "u": self.username,
-            "t": token,
-            "s": salt,
-            "v": API_VERSION,
-            "c": CLIENT_NAME,
-            "f": "json",
-        }
-
-    def call(self, endpoint, **params):
-        url = f"{self.base_url}/rest/{endpoint}.view"
-
-        query = self._auth()
-        query.update(params)
-
-        response = requests.get(
-            url,
-            params=query,
-            timeout=TIMEOUT,
-        )
-        response.raise_for_status()
-
-        data = response.json()
-
-        root = data.get("subsonic-response", {})
-
-        if root.get("status") != "ok":
-            error = root.get("error", {})
-            message = error.get("message", "Unknown Navidrome API error")
-            code = error.get("code", "?")
-            raise RuntimeError(
-                f"Navidrome API error {code}: {message}"
-            )
-
-        return root
-
-    def ping(self):
-        self.call("ping")
-
-    def random_songs(self, size):
-        result = self.call(
-            "getRandomSongs",
-            size=size,
-        )
-
-        return result.get("randomSongs", {}).get("song", [])
-
-    def starred(self):
-        result = self.call("getStarred2")
-
-        return result.get("starred2", {}).get("song", [])
-
-    def playlists(self):
-        result = self.call("getPlaylists")
-
-        return result.get("playlists", {}).get("playlist", [])
-
-    def create_or_update_playlist(self, name, song_ids, playlist_id=None):
-        params = {
-            "name": name,
-            "songId": song_ids,
-        }
-
-        if playlist_id:
-            params["playlistId"] = playlist_id
-
-        return self.call("createPlaylist", **params)
-
-    
-    def update_playlist(self, playlist_id, name, song_ids):
-        # Delete the old playlist
-        self.delete_playlist(playlist_id)
-
-    def delete_playlist(self, playlist_id):
-        self.call(
-            "deletePlaylist",
-            id=playlist_id,
-        )
+def get_client() -> Client:
+    match CLIENT_TYPE:
+        case "navidrome":
+            return Navidrome(NAVIDROME_URL, NAVIDROME_USER, NAVIDROME_PASSWORD)
+    raise ValueError(f"Unknown client type: {CLIENT_TYPE}")
 
 
 # ---------------------------------------------------------------------------
@@ -227,9 +132,9 @@ def album_key(song):
 # Build a large candidate pool
 # ---------------------------------------------------------------------------
 
-def build_pool(navidrome):
+def build_pool(client):
     """
-    Navidrome's random-song endpoint gives us a large, varied sample of the
+    Client's random-song endpoint gives us a large, varied sample of the
     library without needing to walk every album individually.
 
     Multiple requests are used to reduce duplication.
@@ -250,7 +155,7 @@ def build_pool(navidrome):
             POOL_SIZE - len(songs),
         )
 
-        batch = navidrome.random_songs(batch_size)
+        batch = client.random_songs(batch_size)
 
         for raw_song in batch:
             song = normalize_song(raw_song)
@@ -443,13 +348,13 @@ def select_tracks(
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def find_playlist(navidrome, name):
+def find_playlist(client: Client, name: str):
     """
     Find an existing playlist by exact name.
 
     Returns the playlist object or None.
     """
-    playlists = navidrome.playlists()
+    playlists = client.playlists()
 
     for playlist in playlists:
         if playlist.get("name") == name:
@@ -459,22 +364,22 @@ def find_playlist(navidrome, name):
 
 def run(mode, frequency):
     print("=" * 70)
-    print(f"Navidrome {frequency.title()} Mix Generator")
+    print(f"{frequency.title()} Mix Generator")
     print(f"Mode: {mode}")
     print(f"Date: {today()}")
     print("=" * 70)
 
-    navidrome = Navidrome()
+    client = get_client()
 
-    print("Testing Navidrome connection...")
-    navidrome.ping()
-    print("Navidrome connection OK.")
+    print("Testing client connection...")
+    client.ping()
+    print("Client connection OK.")
 
     history = load_history()
 
     # Get favorites for Personal Radio / Balanced scoring.
     print("Loading favorites...")
-    starred = navidrome.starred()
+    starred = client.starred()
 
     starred_ids = {
         song["id"]
@@ -484,7 +389,7 @@ def run(mode, frequency):
 
     print(f"Loaded {len(starred_ids)} favorites.")
 
-    songs = build_pool(navidrome)
+    songs = build_pool(client)
 
     if len(songs) < PLAYLIST_SIZE:
         raise RuntimeError(
@@ -507,7 +412,7 @@ def run(mode, frequency):
         )
 
     name = playlist_name(mode, frequency)
-    playlist = find_playlist(navidrome, name)
+    playlist = find_playlist(client, name)
 
     print()
 
@@ -529,13 +434,13 @@ def run(mode, frequency):
     song_ids = [song["id"] for song in selected]
 
     if playlist:
-        navidrome.create_or_update_playlist(
+        client.create_or_update_playlist(
             name=name,
             song_ids=song_ids,
             playlist_id=playlist["id"],
         )
     else:
-        navidrome.create_or_update_playlist(
+        client.create_or_update_playlist(
             name=name,
             song_ids=song_ids,
         )

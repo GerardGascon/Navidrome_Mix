@@ -1,0 +1,3 @@
+API_VERSION = "1.16.1"
+CLIENT_NAME = "WeeklyMixGenerator"
+TIMEOUT = 30
