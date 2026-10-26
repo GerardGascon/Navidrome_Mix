@@ -14,7 +14,7 @@ from playlists.discovery import DiscoveryPlaylistGenerator
 from playlists.playlistgenerator import PlaylistGenerator
 from playlists.radio import RadioPlaylistGenerator
 from mix_types import Song
-from utils import today, playlist_name
+from utils import today
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -79,9 +79,9 @@ def get_playlist_generator(mode: str) -> PlaylistGenerator:
 # Main
 # ---------------------------------------------------------------------------
 
-def run(mode, frequency):
+def run(name, mode):
     print("=" * 70)
-    print(f"{frequency.title()} Mix Generator")
+    print(f"{name} Generator")
     print(f"Mode: {mode}")
     print(f"Date: {today()}")
     print("=" * 70)
@@ -122,7 +122,6 @@ def run(mode, frequency):
     if len(selected) < globals.PLAYLIST_SIZE:
         raise RuntimeError(f"Could only select {len(selected)} songs.")
 
-    name = playlist_name(mode, frequency)
     playlist = client.find_playlist(name)
 
     print()
@@ -226,4 +225,4 @@ if __name__ == "__main__":
         usage()
         sys.exit(1)
 
-    run(requested_mode, frequency)
+    run(frequency, requested_mode)

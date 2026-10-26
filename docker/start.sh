@@ -7,7 +7,7 @@ echo "[setup] Registered MIX_UPDATE_SCHEDULE job: $MIX_UPDATE_SCHEDULE"
 
 if [ "$EXECUTE_ON_START" = "true" ]; then
   echo "[setup] Executing startup task..."
-  cd /opt/navidrome-mix && python daily_mix.py
+  cd /opt/navidrome-mix && python daily_mix.py --force
 fi
 
 echo "[setup] Starting cron..."

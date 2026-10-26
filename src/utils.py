@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-import globals
 from mix_types import Song
 
 
@@ -14,17 +13,6 @@ def week_start():
     """
     current = today()
     return current - timedelta(days=current.weekday())
-
-
-def playlist_name(mode, frequency):
-    if frequency == "daily":
-        prefix = globals.DAILY_PLAYLIST_PREFIX
-    elif frequency == "weekly":
-        prefix = globals.WEEKLY_PLAYLIST_PREFIX
-    else:
-        raise ValueError(f"Unknown frequency: {frequency}")
-
-    return f"{prefix} — {mode}"
 
 
 def artist_key(song: Song):
