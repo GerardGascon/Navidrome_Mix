@@ -138,17 +138,11 @@ def run(mode, frequency):
     for index, song in enumerate(selected, 1):
         print(f"{index:02d}. {song.artist} - {song.artist}")
 
-    if playlist:
-        client.create_or_update_playlist(
-            name=name,
-            songs=selected,
-            playlist=playlist,
-        )
-    else:
-        client.create_or_update_playlist(
-            name=name,
-            songs=selected,
-        )
+    client.create_or_update_playlist(
+        name=name,
+        songs=selected,
+        playlist=playlist,
+    )
 
     # Record generated tracks so future mixes can avoid them.
     timestamp = datetime.now(timezone.utc).isoformat()
