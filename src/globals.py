@@ -16,4 +16,4 @@ DAILY_PLAYLIST_PREFIX = os.getenv("DAILY_PLAYLIST_PREFIX", "Daily Mix")
 WEEKLY_PLAYLIST_PREFIX = os.getenv("WEEKLY_PLAYLIST_PREFIX", "Weekly Mix")
 KEEP_PLAYLIST_DAYS = int(os.getenv("KEEP_PLAYLIST_DAYS", "30"))
 
-HISTORY_FILE = Path(os.path.abspath(os.sep)) / "data/history.json"
+HISTORY_FILE = Path(os.path.abspath(os.sep)) / "data" / "history.json"

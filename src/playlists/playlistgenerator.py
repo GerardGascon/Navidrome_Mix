@@ -1,8 +1,10 @@
 import random
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from datetime import datetime, timezone, timedelta
+from typing import Any
 
-from utils import generated_recently, artist_key, album_key
+from utils import artist_key, album_key
 import globals
 
 
@@ -18,40 +20,32 @@ class PlaylistGenerator(ABC):
         score = self._score_song(play_count, is_starred)
 
         # Strongly discourage tracks that appeared in recent generated mixes.
-        if generated_recently(song["id"], history):
+        if self._generated_recently(song["id"], history):
             score *= 0.03
 
         return score
 
-    def generate(self, songs, starred_ids, history):
-        # First try to select ONLY songs that have not appeared
-        # in a recently generated playlist.
-        fresh_songs = [
-            song
-            for song in songs
-            if not generated_recently(song["id"], history)
-        ]
+    @staticmethod
+    def _generated_recently(song_id, history):
+        cutoff = datetime.now(timezone.utc) - timedelta(days=globals.AVOID_GENERATED_DAYS)
 
-        # If we don't have enough fresh songs, fall back to the
-        # complete pool so the playlist can still reach PLAYLIST_SIZE.
-        if len(fresh_songs) >= globals.PLAYLIST_SIZE:
-            candidates = fresh_songs
-            print(
-                f"Using {len(fresh_songs)} fresh songs "
-                f"(excluding recently generated tracks)."
-            )
-        else:
-            candidates = songs
-            print(
-                f"WARNING: Only {len(fresh_songs)} fresh songs available. "
-                f"Using full candidate pool."
-            )
+        timestamp = history.get("tracks", {}).get(song_id)
+
+        if not timestamp:
+            return False
+
+        try:
+            played = datetime.fromisoformat(timestamp)
+        except ValueError:
+            return False
+
+        return played >= cutoff
+
+    def generate(self, songs, starred_ids, history):
+        candidates = self._get_playlist_candidates(history, songs)
 
         scored = [
-            (
-                self._score(song, starred_ids, history),
-                song,
-            )
+            (self._score(song, starred_ids, history), song,)
             for song in candidates
         ]
 
@@ -60,6 +54,37 @@ class PlaylistGenerator(ABC):
             reverse=True,
         )
 
+        selected = self._select_diverse_songs(scored)
+
+        # If diversity restrictions prevented us from reaching 40,
+        # fill from the remaining candidates.
+        if len(selected) < globals.PLAYLIST_SIZE:
+            selected.append(self._get_remaining_candidates(scored, selected))
+
+        random.shuffle(selected)
+
+        return selected[:globals.PLAYLIST_SIZE]
+
+    @staticmethod
+    def _get_remaining_candidates(scored, selected) -> list[Any]:
+        candidates = []
+
+        selected_ids = {song["id"] for song in selected}
+
+        for score, song in scored:
+            if song["id"] in selected_ids:
+                continue
+
+            candidates.append(song)
+            selected_ids.add(song["id"])
+
+            if len(selected) >= globals.PLAYLIST_SIZE:
+                break
+
+        return candidates
+
+    @staticmethod
+    def _select_diverse_songs(scored) -> list[Any]:
         selected = []
 
         artists = defaultdict(int)
@@ -83,22 +108,23 @@ class PlaylistGenerator(ABC):
 
             if len(selected) >= globals.PLAYLIST_SIZE:
                 break
+        return selected
 
-        # If diversity restrictions prevented us from reaching 40,
-        # fill from the remaining candidates.
-        if len(selected) < globals.PLAYLIST_SIZE:
-            selected_ids = {song["id"] for song in selected}
+    @classmethod
+    def _get_playlist_candidates(cls, history, songs) -> list[Any]:
+        # First try to select ONLY songs that have not appeared
+        # in a recently generated playlist.
+        fresh_songs = [
+            song
+            for song in songs
+            if not cls._generated_recently(song["id"], history)
+        ]
 
-            for score, song in scored:
-                if song["id"] in selected_ids:
-                    continue
+        # If we don't have enough fresh songs, fall back to the
+        # complete pool so the playlist can still reach PLAYLIST_SIZE.
+        if len(fresh_songs) >= globals.PLAYLIST_SIZE:
+            print(f"Using {len(fresh_songs)} fresh songs (excluding recently generated tracks).")
+            return fresh_songs
 
-                selected.append(song)
-                selected_ids.add(song["id"])
-
-                if len(selected) >= globals.PLAYLIST_SIZE:
-                    break
-
-        random.shuffle(selected)
-
-        return selected[:globals.PLAYLIST_SIZE]
+        print(f"WARNING: Only {len(fresh_songs)} fresh songs available. Using full candidate pool.")
+        return songs

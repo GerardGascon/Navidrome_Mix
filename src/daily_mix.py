@@ -297,7 +297,4 @@ if __name__ == "__main__":
         usage()
         sys.exit(1)
 
-    run(
-        modes,
-        frequency,
-    )
+    run(requested_mode, frequency)
