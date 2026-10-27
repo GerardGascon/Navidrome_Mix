@@ -70,12 +70,6 @@ def run(name, mode):
     for song in selected:
         history.tracks[song.id] = timestamp
 
-    history.playlists[name] = {
-        "updated": timestamp,
-        "mode": mode,
-        "tracks": [song.id for song in selected],
-    }
-
     history.save()
 
     print()

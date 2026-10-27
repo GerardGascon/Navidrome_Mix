@@ -92,5 +92,4 @@ These are the values possible:
 | SONG_MIN_LENGTH      | 60          | Minimum length for a song to be included in the processing.                                  |
 | AVOID_GENERATED_DAYS |             | Amount of days before a song is repeated in a playlist.                                      |
 | POOL_SIZE            |             | Size of the pool of random songs.                                                            |
-| KEEP_PLAYLIST_DAYS   |             |                                                                                              |
 | EXECUTE_ON_START     | false       | Execute playlist generation on startup.                                                      |
