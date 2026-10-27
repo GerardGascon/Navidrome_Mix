@@ -36,7 +36,6 @@ services:
       - SONG_MIN_LENGTH=60
       - AVOID_GENERATED_DAYS=30
       - POOL_SIZE=3000
-      - KEEP_PLAYLIST_DAYS=30
     volumes:
       - ./data:/data
     restart: unless-stopped
@@ -90,6 +89,6 @@ These are the values possible:
 | MAX_PER_ARTIST       | 2           | Max songs an artist has in a playlist.                                                       |
 | MAX_PER_ALBUM        | 1           | Max songs from the same album in a playlist.                                                 |
 | SONG_MIN_LENGTH      | 60          | Minimum length for a song to be included in the processing.                                  |
-| AVOID_GENERATED_DAYS |             | Amount of days before a song is repeated in a playlist.                                      |
-| POOL_SIZE            |             | Size of the pool of random songs.                                                            |
+| AVOID_GENERATED_DAYS | 30          | Amount of days before a song is repeated in a playlist.                                      |
+| POOL_SIZE            | 3000        | Size of the pool of random songs.                                                            |
 | EXECUTE_ON_START     | false       | Execute playlist generation on startup.                                                      |

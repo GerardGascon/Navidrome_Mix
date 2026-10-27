@@ -13,7 +13,6 @@ services:
       - SONG_MIN_LENGTH=60
       - AVOID_GENERATED_DAYS=30
       - POOL_SIZE=3000
-      - KEEP_PLAYLIST_DAYS=30
     volumes:
       - ./data:/data
     restart: unless-stopped
