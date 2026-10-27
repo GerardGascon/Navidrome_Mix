@@ -21,8 +21,6 @@ class PlaylistGenerator(ABC):
         pass
 
     def _score(self, song: Song, history) -> float:
-        play_count = song.play_count
-
         score = self._score_song(song)
 
         # Strongly discourage tracks that appeared in recent generated mixes.
