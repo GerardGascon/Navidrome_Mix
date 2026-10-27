@@ -5,6 +5,7 @@ services:
     env_file:
       - .env
     environment:
+      - TZ=Europe/Madrid
       - SERVER_URL=${SERVER_URL}
       - SERVER_USERNAME=${SERVER_USERNAME}
       - SERVER_PASSWORD=${SERVER_PASSWORD}

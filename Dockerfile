@@ -1,5 +1,8 @@
 FROM python:3-alpine
 
+RUN apk add --no-cache tzdata
+ENV TZ=Etc/UTC
+
 WORKDIR /opt/navidrome-mix/
 
 COPY ./docker/start.sh /start.sh

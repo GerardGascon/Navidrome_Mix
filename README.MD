@@ -28,6 +28,7 @@ services:
     env_file:
       - .env
     environment:
+      - TZ=Etc/UTC
       - CLIENT_TYPE=navidrome
       - SERVER_URL=${SERVER_URL}
       - SERVER_USERNAME=${SERVER_USER}
@@ -101,3 +102,4 @@ These are the values possible:
 | AVOID_GENERATED_DAYS | 30      | Amount of days before a song is repeated in a playlist.                                                      |
 | POOL_SIZE            | 3000    | Size of the pool of random songs.                                                                            |
 | EXECUTE_ON_START     | false   | Execute playlist generation on startup.                                                                      |
+| TZ                   | Etc/UTC | Change timezone of the program.                                                                              |
