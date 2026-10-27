@@ -18,11 +18,8 @@ class Navidrome(Client):
         self.session = requests.Session()
         self.token = None
 
-    def _authenticate(self):
+    def _authenticate(self) -> None:
         url = f"{self.base_url}/auth/login"
-
-        print(self.username)
-        print(self.password)
 
         response = self.session.post(
             url,
@@ -40,17 +37,25 @@ class Navidrome(Client):
         if not self.token:
             raise RuntimeError(f"Navidrome authentication failed: {data}")
 
-    def _call(self, endpoint, method="GET", **params):
+    def _call(self, endpoint: str, method: str = "GET", **kwargs) -> Any:
         if not self.token:
             self._authenticate()
 
         url = f"{self.base_url}/api/{endpoint.lstrip('/')}"
 
+        json_body = kwargs.pop("json", None)
+        query_params = kwargs.pop("params", None)
+
+        if query_params is None:
+            query_params = kwargs or None
+        elif kwargs:
+            query_params = {**query_params, **kwargs}
+
         response = self.session.request(
             method=method,
             url=url,
-            params=params if method == "GET" else None,
-            json=params.get("json") if method != "GET" else None,
+            params=query_params,
+            json=json_body,
             headers={
                 "x-nd-authorization": f"Bearer {self.token}",
             },
@@ -59,11 +64,13 @@ class Navidrome(Client):
         response.raise_for_status()
 
         refreshed_token = response.headers.get("x-nd-authorization")
-
         if refreshed_token:
             scheme, _, token = refreshed_token.partition(" ")
             if scheme.lower() == "bearer" and token:
                 self.token = token
+
+        if response.status_code == 204 or not response.content:
+            return None
 
         return response.json()
 
@@ -80,11 +87,14 @@ class Navidrome(Client):
             play_count=raw.get("playCount", 0),
         )
 
-    def ping(self):
-        response = self.session.get(f"{self.base_url}/ping")
+    def ping(self) -> None:
+        response = self.session.get(
+            f"{self.base_url}/ping",
+            timeout=globals.TIMEOUT,
+        )
         response.raise_for_status()
 
-    def random_songs(self, size) -> list[Song]:
+    def random_songs(self, size: int) -> list[Song]:
         result = self._call(
             "song/",
             _sort="random",
@@ -102,11 +112,11 @@ class Navidrome(Client):
 
         return [self._parse_song(song) for song in result]
 
-    def playlists(self):
-        result = self._call("playlist/")
-        return result
+    def playlists(self) -> Any:
+        return self._call("playlist/")
 
-    def create_or_update_playlist(self, name: str, cover: str | None, songs: list[Song], playlist: Playlist | None = None) -> None:
+    def create_or_update_playlist(self, name: str, cover: str | None, songs: list[Song],
+                                  playlist: Playlist | None = None) -> None:
         song_ids = [song.id for song in songs]
 
         if playlist:
@@ -138,22 +148,43 @@ class Navidrome(Client):
                 method="POST",
                 json={"ids": song_ids},
             )
-            
+
         return playlist_id
 
-
-    def _update_playlist(self, name: str, playlist: Playlist, song_ids: list[str]) -> Any:
+    def _update_playlist(self, name: str, playlist: Playlist, song_ids: list[str]) -> None:
         self._call(
             f"playlist/{playlist.id}/",
             method="PUT",
             json={"name": name},
         )
 
-        self._call(
-            f"playlist/{playlist.id}/tracks/",
-            method="POST",
-            json={"ids": song_ids},
-        )
+        self._clear_playlist(playlist)
+
+        if song_ids:
+            self._call(
+                f"playlist/{playlist.id}/tracks/",
+                method="POST",
+                json={"ids": song_ids},
+            )
+
+    def _clear_playlist(self, playlist: Playlist):
+        tracks_url = f"playlist/{playlist.id}/tracks/"
+        batch_size = 100
+
+        while True:
+            tracks = self._call(tracks_url)
+
+            if not tracks:
+                break
+
+            batch = tracks[:batch_size]
+            track_ids = [track["id"] for track in batch]
+
+            self._call(
+                tracks_url,
+                method="DELETE",
+                params=[("id", track_id) for track_id in track_ids],
+            )
 
     def _upload_playlist_cover(self, playlist_id: str, cover_path: str | Path) -> None:
         path = Path(cover_path)
