@@ -1,6 +1,7 @@
-# Navidrome Mix Generator
+# Daily Mixer
 
-Automatically generates Daily and Weekly playlists in Navidrome using several mix-generation modes.
+Automatically generates Daily and Weekly playlists in your OpenSubSonic/Navidrome server using several mix-generation
+modes.
 
 ## Overview
 
