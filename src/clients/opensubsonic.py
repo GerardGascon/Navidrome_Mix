@@ -9,13 +9,10 @@ from .client import Client
 
 
 class OpenSubsonic(Client):
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, username: str, password: str) -> None:
         self.base_url = base_url
-
-        self.username = os.getenv("SUBSONIC_USER")
-        assert self.username, "SUBSONIC_USER environment variable not set"
-        self.password = os.getenv("SUBSONIC_PASSWORD")
-        assert self.password, "SUBSONIC_PASSWORD environment variable not set"
+        self.username = username
+        self.password = password
 
     def _auth(self):
         salt = os.urandom(16).hex()
@@ -98,23 +95,12 @@ class OpenSubsonic(Client):
 
         return songs
 
-    def _starred_ids(self) -> list[str]:
-        result = self._call("getStarred2")
-
-        batch = result.get("starred2", {}).get("song", [])
-
-        songs: list[str] = []
-        for raw_song in batch:
-            songs.append(self._parse_song(raw_song).id)
-
-        return songs
-
     def playlists(self):
         result = self._call("getPlaylists")
 
         return result.get("playlists", {}).get("playlist", [])
 
-    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None):
+    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None) -> None:
         params = {
             "name": name,
             "songId": [song.id for song in songs],
@@ -123,4 +109,4 @@ class OpenSubsonic(Client):
         if playlist:
             params["playlistId"] = playlist.id
 
-        return self._call("createPlaylist", **params)
+        self._call("createPlaylist", **params)

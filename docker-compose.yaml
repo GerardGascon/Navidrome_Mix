@@ -6,8 +6,8 @@ services:
       - .env
     environment:
       - SERVER_URL=${SERVER_URL}
-      - SUBSONIC_USER=${SUBSONIC_USER}
-      - SUBSONIC_PASSWORD=${SUBSONIC_PASSWORD}
+      - USERNAME=${USERNAME}
+      - PASSWORD=${PASSWORD}
       - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
       - MAX_PER_ALBUM=1
