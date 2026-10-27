@@ -1,7 +1,6 @@
 services:
   navidrome_mix:
-#    image: ghcr.io/gerardgascon/daily-mixer:latest
-    build: .
+    image: ghcr.io/gerardgascon/daily-mixer:latest
     env_file:
       - .env
     environment:
