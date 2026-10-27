@@ -1,12 +1,13 @@
 services:
   navidrome_mix:
+#    image: ghcr.io/gerardgascon/daily-mixer:latest
     build: .
     env_file:
       - .env
     environment:
-      - NAVIDROME_URL=${NAVIDROME_URL}
-      - NAVIDROME_USER=${NAVIDROME_USER}
-      - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
+      - SERVER_URL=${SERVER_URL}
+      - SUBSONIC_USER=${SUBSONIC_USER}
+      - SUBSONIC_PASSWORD=${SUBSONIC_PASSWORD}
       - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
       - MAX_PER_ALBUM=1

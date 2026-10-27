@@ -27,9 +27,10 @@ services:
     env_file:
       - .env
     environment:
-      - NAVIDROME_URL=${NAVIDROME_URL}
-      - NAVIDROME_USER=${NAVIDROME_USER}
-      - NAVIDROME_PASSWORD=${NAVIDROME_PASSWORD}
+      - CLIENT_TYPE=opensubsonic
+      - SERVER_URL=${SERVER_URL}
+      - SUBSONIC_USER=${SUBSONIC_USER}
+      - SUBSONIC_PASSWORD=${SUBSONIC_PASSWORD}
       - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
       - MAX_PER_ALBUM=1
@@ -79,16 +80,16 @@ These are the values possible:
 
 ## Environment variables
 
-| variable             | default     | description                                                                                  |
-|----------------------|-------------|----------------------------------------------------------------------------------------------|
-| CLIENT_TYPE          | `navidrome` | Select the server type where the playlists will be created. Possible values are: `navidrome` |
-| NAVIDROME_URL        |             | Accessible url from your instance.                                                           |
-| NAVIDROME_USER       |             | Your username.                                                                               |
-| NAVIDROME_PASSWORD   |             | Your password.                                                                               |
-| PLAYLIST_SIZE        | 50          | An integer representing the size of the playlists created.                                   |
-| MAX_PER_ARTIST       | 2           | Max songs an artist has in a playlist.                                                       |
-| MAX_PER_ALBUM        | 1           | Max songs from the same album in a playlist.                                                 |
-| SONG_MIN_LENGTH      | 60          | Minimum length for a song to be included in the processing.                                  |
-| AVOID_GENERATED_DAYS | 30          | Amount of days before a song is repeated in a playlist.                                      |
-| POOL_SIZE            | 3000        | Size of the pool of random songs.                                                            |
-| EXECUTE_ON_START     | false       | Execute playlist generation on startup.                                                      |
+| variable             | default | description                                                                                     |
+|----------------------|---------|-------------------------------------------------------------------------------------------------|
+| CLIENT_TYPE          |         | Select the server type where the playlists will be created. Possible values are: `opensubsonic` |
+| SERVER_URL           |         | Accessible url from your instance.                                                              |
+| SUBSONIC_USER        |         | Your username for OpenSubsonic servers.                                                         |
+| SUBSONIC_PASSWORD    |         | Your password for OpenSubsonic servers.                                                         |
+| PLAYLIST_SIZE        | 50      | An integer representing the size of the playlists created.                                      |
+| MAX_PER_ARTIST       | 2       | Max songs an artist has in a playlist.                                                          |
+| MAX_PER_ALBUM        | 1       | Max songs from the same album in a playlist.                                                    |
+| SONG_MIN_LENGTH      | 60      | Minimum length for a song to be included in the processing.                                     |
+| AVOID_GENERATED_DAYS | 30      | Amount of days before a song is repeated in a playlist.                                         |
+| POOL_SIZE            | 3000    | Size of the pool of random songs.                                                               |
+| EXECUTE_ON_START     | false   | Execute playlist generation on startup.                                                         |

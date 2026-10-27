@@ -8,14 +8,14 @@ from mix_types import Song, Playlist
 from .client import Client
 
 
-class Navidrome(Client):
-    def __init__(self):
-        self.base_url = os.getenv("NAVIDROME_URL")
-        assert self.base_url, "NAVIDROME_URL environment variable not set"
-        self.username = os.getenv("NAVIDROME_USER")
-        assert self.username, "NAVIDROME_USER environment variable not set"
-        self.password = os.getenv("NAVIDROME_PASSWORD")
-        assert self.password, "NAVIDROME_PASSWORD environment variable not set"
+class OpenSubsonic(Client):
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+
+        self.username = os.getenv("SUBSONIC_USER")
+        assert self.username, "SUBSONIC_USER environment variable not set"
+        self.password = os.getenv("SUBSONIC_PASSWORD")
+        assert self.password, "SUBSONIC_PASSWORD environment variable not set"
 
     def _auth(self):
         salt = os.urandom(16).hex()
@@ -54,7 +54,7 @@ class Navidrome(Client):
             message = error.get("message", "Unknown Navidrome API error")
             code = error.get("code", "?")
             raise RuntimeError(
-                f"Navidrome API error {code}: {message}"
+                f"OpenSubsonic API error {code}: {message}"
             )
 
         return root

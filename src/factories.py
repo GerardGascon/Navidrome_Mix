@@ -1,15 +1,21 @@
+import os
+
 from clients.client import Client
-from clients.navidrome import Navidrome
+from clients.opensubsonic import OpenSubsonic
 from playlists.balanced import BalancedPlaylistGenerator
 from playlists.deep import DeepPlaylistGenerator
 from playlists.discovery import DiscoveryPlaylistGenerator
 from playlists.playlistgenerator import PlaylistGenerator
 from playlists.radio import RadioPlaylistGenerator
 
+
 def get_client(client_type: str) -> Client:
+    base_url = os.getenv("SERVER_URL")
+    assert base_url, "SERVER_URL environment variable not set"
+
     match client_type:
-        case "navidrome":
-            return Navidrome()
+        case "opensubsonic":
+            return OpenSubsonic(base_url)
     raise ValueError(f"Unknown client type: {client_type}")
 
 
