@@ -5,10 +5,11 @@ ENV TZ=Etc/UTC
 
 WORKDIR /opt/navidrome-mix/
 
+ADD ./requirements.txt .
+RUN pip install -r requirements.txt
+
 COPY ./docker/start.sh /start.sh
 COPY ./src .
-
-RUN pip install -r requirements.txt
 
 # Can be defined from compose as well
 ENV MIX_UPDATE_SCHEDULE="0 2 * * *"
