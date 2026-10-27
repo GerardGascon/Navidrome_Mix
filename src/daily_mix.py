@@ -8,20 +8,20 @@ from globals import CONFIG_FILE
 from utils import today
 
 
-def generate(name: str, generator: str):
-    mixer.run(name, generator)
+def generate(name: str, cover: str | None, generator: str):
+    mixer.run(name, cover, generator)
 
 
-def try_generate(name: str, generator: str, frequency: str, forced: bool):
+def try_generate(name: str, generator: str, frequency: str, cover: str | None, forced: bool):
     if forced:
-        generate(name, generator)
+        generate(name, cover, generator)
         return
 
     if frequency == "daily":
-        generate(name, generator)
+        generate(name, cover, generator)
 
     if frequency == "weekly" and today().weekday() == 0:
-        generate(name, generator)
+        generate(name, cover, generator)
 
 
 def daily_run(forced: bool):
@@ -29,7 +29,13 @@ def daily_run(forced: bool):
         data = yaml.load(file, Loader=yaml.SafeLoader)
         playlists = data["playlists"]
         for playlist in playlists:
-            try_generate(playlist["name"], playlist["generator"], playlist["frequency"], forced)
+            try_generate(
+                playlist.get("name"),
+                playlist.get("generator"),
+                playlist.get("frequency"),
+                playlist.get("cover", None),
+                forced
+            )
 
 
 if __name__ == "__main__":

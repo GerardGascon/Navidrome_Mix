@@ -13,5 +13,6 @@ SONG_MIN_LENGTH = int(os.getenv("SONG_MIN_LENGTH", "60"))
 AVOID_GENERATED_DAYS = int(os.getenv("AVOID_GENERATED_DAYS", "30"))
 POOL_SIZE = int(os.getenv("POOL_SIZE", "3000"))
 
-HISTORY_FILE = Path(os.path.abspath(os.sep)) / "data" / "history.json"
-CONFIG_FILE = Path(os.path.abspath(os.sep)) / "data" / "config.yaml"
+DATA_PATH = Path(os.path.abspath(os.sep)) / "data"
+HISTORY_FILE = DATA_PATH / "history.json"
+CONFIG_FILE = DATA_PATH / "config.yaml"

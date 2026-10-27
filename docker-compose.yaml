@@ -6,8 +6,8 @@ services:
       - .env
     environment:
       - SERVER_URL=${SERVER_URL}
-      - USERNAME=${USERNAME}
-      - PASSWORD=${PASSWORD}
+      - SERVER_USERNAME=${SERVER_USERNAME}
+      - SERVER_PASSWORD=${SERVER_PASSWORD}
       - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
       - MAX_PER_ALBUM=1

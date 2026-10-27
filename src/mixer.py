@@ -10,7 +10,7 @@ from mix_types import Song
 from utils import today
 
 
-def run(name, mode):
+def run(name: str, cover: str | None, mode: str):
     print("=" * 70)
     print(f"{name} Generator")
     print(f"Mode: {mode}")
@@ -60,6 +60,7 @@ def run(name, mode):
 
     client.create_or_update_playlist(
         name=name,
+        cover=cover,
         songs=selected,
         playlist=playlist,
     )
@@ -137,4 +138,4 @@ if __name__ == "__main__":
         usage()
         sys.exit(1)
 
-    run(frequency, requested_mode)
+    run(frequency, None, requested_mode)

@@ -13,10 +13,10 @@ from playlists.radio import RadioPlaylistGenerator
 def get_client(client_type: str) -> Client:
     base_url = os.getenv("SERVER_URL")
     assert base_url, "SERVER_URL environment variable not set"
-    username = os.getenv("USERNAME")
-    assert username, "USERNAME environment variable not set"
-    password = os.getenv("PASSWORD")
-    assert password, "PASSWORD environment variable not set"
+    username = os.getenv("SERVER_USERNAME")
+    assert username, "SERVER_USERNAME environment variable not set"
+    password = os.getenv("SERVER_PASSWORD")
+    assert password, "SERVER_PASSWORD environment variable not set"
 
     match client_type:
         case "opensubsonic":

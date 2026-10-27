@@ -23,7 +23,7 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None) -> None:
+    def create_or_update_playlist(self, name: str, cover: str | None, songs: list[Song], playlist: Playlist | None = None) -> None:
         pass
 
     def find_playlist(self, name: str) -> Playlist | None:

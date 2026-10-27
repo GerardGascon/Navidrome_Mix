@@ -27,10 +27,10 @@ services:
     env_file:
       - .env
     environment:
-      - CLIENT_TYPE=opensubsonic
+      - CLIENT_TYPE=navidrome
       - SERVER_URL=${SERVER_URL}
-      - SUBSONIC_USER=${SUBSONIC_USER}
-      - SUBSONIC_PASSWORD=${SUBSONIC_PASSWORD}
+      - SERVER_USERNAME=${SERVER_USER}
+      - SERVER_PASSWORD=${SERVER_PASSWORD}
       - PLAYLIST_SIZE=50
       - MAX_PER_ARTIST=2
       - MAX_PER_ALBUM=1
@@ -50,21 +50,28 @@ playlists:
   - name: "Daily Mix 1"
     generator: "discovery"
     frequency: "daily"
+    cover: "daily-mix-1.jpg"
   - name: "Daily Mix 2"
     generator: "radio"
     frequency: "daily"
+    cover: "daily-mix-2.jpg"
   - name: "Daily Mix 3"
     generator: "deep"
     frequency: "daily"
+    cover: "daily-mix-3.jpg"
   - name: "Daily Mix 4"
     generator: "balanced"
     frequency: "daily"
+    cover: "daily-mix-4.jpg"
   - name: "Discovery Weekly"
     generator: "discovery"
     frequency: "weekly"
+    cover: "discovery-weekly.jpg"
 ```
 
 These are the values possible:
+
+**cover**: path relative to `config.yaml` file (only implemented in Navidrome).
 
 **generator**
 
@@ -84,8 +91,8 @@ These are the values possible:
 |----------------------|---------|--------------------------------------------------------------------------------------------------------------|
 | CLIENT_TYPE          |         | Select the server type where the playlists will be created. Possible values are: `opensubsonic`, `navidrome` |
 | SERVER_URL           |         | Accessible url from your instance.                                                                           |
-| USERNAME             |         | Your username.                                                                                               |
-| PASSWORD             |         | Your password.                                                                                               |
+| SERVER_USERNAME      |         | Your username.                                                                                               |
+| SERVER_PASSWORD      |         | Your password.                                                                                               |
 | PLAYLIST_SIZE        | 50      | An integer representing the size of the playlists created.                                                   |
 | MAX_PER_ARTIST       | 2       | Max songs an artist has in a playlist.                                                                       |
 | MAX_PER_ALBUM        | 1       | Max songs from the same album in a playlist.                                                                 |

@@ -1,3 +1,5 @@
+import mimetypes
+from pathlib import Path
 from typing import Any
 
 import requests
@@ -18,6 +20,9 @@ class Navidrome(Client):
 
     def _authenticate(self):
         url = f"{self.base_url}/auth/login"
+
+        print(self.username)
+        print(self.password)
 
         response = self.session.post(
             url,
@@ -101,15 +106,20 @@ class Navidrome(Client):
         result = self._call("playlist/")
         return result
 
-    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None) -> None:
+    def create_or_update_playlist(self, name: str, cover: str | None, songs: list[Song], playlist: Playlist | None = None) -> None:
         song_ids = [song.id for song in songs]
 
         if playlist:
+            playlist_id = playlist.id
             self._update_playlist(name, playlist, song_ids)
-            return
-        self._create_playlist(name, song_ids)
+        else:
+            playlist_id = self._create_playlist(name, song_ids)
 
-    def _create_playlist(self, name: str, song_ids: list[str]):
+        if cover is not None:
+            cover_path = globals.DATA_PATH / cover
+            self._upload_playlist_cover(playlist_id, cover_path)
+
+    def _create_playlist(self, name: str, song_ids: list[str]) -> str:
         result = self._call(
             "playlist/",
             method="POST",
@@ -128,6 +138,8 @@ class Navidrome(Client):
                 method="POST",
                 json={"ids": song_ids},
             )
+            
+        return playlist_id
 
 
     def _update_playlist(self, name: str, playlist: Playlist, song_ids: list[str]) -> Any:
@@ -142,3 +154,28 @@ class Navidrome(Client):
             method="POST",
             json={"ids": song_ids},
         )
+
+    def _upload_playlist_cover(self, playlist_id: str, cover_path: str | Path) -> None:
+        path = Path(cover_path)
+        content_type, _ = mimetypes.guess_type(path.name)
+
+        if not content_type or not content_type.startswith("image/"):
+            raise ValueError(f"Unsupported cover image: {path}")
+
+        url = f"{self.base_url}/api/playlist/{playlist_id}/image"
+
+        with path.open("rb") as image:
+            response = self.session.post(
+                url,
+                files={"image": (path.name, image, content_type)},
+                headers={"x-nd-authorization": f"Bearer {self.token}"},
+                timeout=globals.TIMEOUT,
+            )
+
+        response.raise_for_status()
+
+        refreshed_token = response.headers.get("x-nd-authorization")
+        if refreshed_token:
+            scheme, _, token = refreshed_token.partition(" ")
+            if scheme.lower() == "bearer" and token:
+                self.token = token

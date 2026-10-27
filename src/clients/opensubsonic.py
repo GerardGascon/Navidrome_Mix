@@ -100,7 +100,7 @@ class OpenSubsonic(Client):
 
         return result.get("playlists", {}).get("playlist", [])
 
-    def create_or_update_playlist(self, name: str, songs: list[Song], playlist: Playlist | None = None) -> None:
+    def create_or_update_playlist(self, name: str, cover: str | None, songs: list[Song], playlist: Playlist | None = None) -> None:
         params = {
             "name": name,
             "songId": [song.id for song in songs],
