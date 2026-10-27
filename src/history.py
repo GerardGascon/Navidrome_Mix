@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone, timedelta
 
 import globals
 
@@ -20,7 +21,18 @@ class History:
             print("WARNING: Could not read history.json; starting fresh.")
             return History({})
 
+    def clean(self):
+        cutoff = datetime.now(timezone.utc) - timedelta(days=globals.AVOID_GENERATED_DAYS)
+
+        tmp: dict[str, str] = {}
+        for t_id, timestamp in self.tracks.items():
+            played = datetime.fromisoformat(timestamp)
+            if played >= cutoff:
+                tmp[t_id] = timestamp
+        self.tracks = tmp
+
     def save(self):
+        self.clean()
         temporary = globals.HISTORY_FILE.with_suffix(".tmp")
 
         with temporary.open("w", encoding="utf-8") as f:
