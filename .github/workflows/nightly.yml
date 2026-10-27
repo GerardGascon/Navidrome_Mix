@@ -1,4 +1,4 @@
-name: Build Images
+name: Build Nightly Images
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           push: true
           tags: |
-            ${{ env.ENDPOINT }}:latest-${{ matrix.arch }}
+            ${{ env.ENDPOINT }}:nightly-${{ matrix.arch }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
@@ -64,6 +64,6 @@ jobs:
         run: |
           # Create :latest (Multi-arch)
           docker buildx imagetools create \
-            -t ${{ env.ENDPOINT }}:latest \
-            ${{ env.ENDPOINT }}:latest-amd64 \
-            ${{ env.ENDPOINT }}:latest-arm64
+            -t ${{ env.ENDPOINT }}:nightly \
+            ${{ env.ENDPOINT }}:nightly-amd64 \
+            ${{ env.ENDPOINT }}:nightly-arm64
