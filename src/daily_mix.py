@@ -39,7 +39,7 @@ def daily_run(forced: bool):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 0 and sys.argv[1].lower() == "--force":
+    if len(sys.argv) > 1 and sys.argv[1].lower() == "--force":
         daily_run(True)
         sys.exit()
 
