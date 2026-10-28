@@ -50,8 +50,7 @@ jobs:
           file: Dockerfile
           platforms: linux/${{ matrix.arch }}
           push: true
-          tags: |
-            ${{ env.ENDPOINT }}:${{ needs.version.outputs.version }}-${{ matrix.arch }}
+          tags: ${{ env.ENDPOINT }}:latest-${{ matrix.arch }},${{ env.ENDPOINT }}:${{ needs.version.outputs.version }}-${{ matrix.arch }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
